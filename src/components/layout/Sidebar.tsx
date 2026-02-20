@@ -6,6 +6,8 @@ import { cn } from '@/lib/utils'
 
 const navItems = [
   { href: '/', label: '首页' },
+  { href: '/roadmap', label: '学习路线' },
+  { href: '/tasks', label: '今日任务' },
   { href: '/deck', label: '我的卡片' },
   { href: '/create', label: '创建卡片' },
 ]

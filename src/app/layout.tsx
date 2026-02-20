@@ -16,8 +16,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "栈记 (StackMemory) - 技术面试闪卡",
-  description: "将技术文章转化为面试准备闪卡",
+  title: "栈记学习站 (StackMemory Learning) - 你的专属 Agent 学习系统",
+  description: "为老板定制学习路线、每日任务、闪卡沉淀与复盘的学习网站",
 };
 
 export default function RootLayout({

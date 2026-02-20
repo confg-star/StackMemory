@@ -28,10 +28,10 @@ export default function Home() {
         <>
           <div className="text-center space-y-4">
             <h1 className="text-4xl font-bold tracking-tight">
-              栈记 <span className="text-muted-foreground">StackMemory</span>
+              栈记学习站 <span className="text-muted-foreground">StackMemory Learning</span>
             </h1>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              将技术文章转化为面试准备闪卡，让学习更高效
+              你的专属 Agent 学习网站：路线、任务、闪卡和复盘都在这里
             </p>
           </div>
 
@@ -40,11 +40,11 @@ export default function Home() {
             <Card>
               <CardHeader className="flex flex-row items-center gap-2 pb-2">
                 <Sparkles className="h-5 w-5 text-primary" />
-                <CardTitle className="text-base">AI 智能解析</CardTitle>
+                <CardTitle className="text-base">学习路线</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-muted-foreground">
-                  自动从技术文章中提取关键知识点，生成高质量面试问答
+                  我会按你的目标动态维护 12 周 Agent 路线，清楚知道每周学什么
                 </p>
               </CardContent>
             </Card>
@@ -52,11 +52,11 @@ export default function Home() {
             <Card>
               <CardHeader className="flex flex-row items-center gap-2 pb-2">
                 <Brain className="h-5 w-5 text-primary" />
-                <CardTitle className="text-base">间隔重复</CardTitle>
+                <CardTitle className="text-base">每日任务</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-muted-foreground">
-                  科学记忆曲线设计，帮助你长期巩固技术知识
+                  每天给你 3 个可执行任务（学习/实操/复盘），做完就有进展
                 </p>
               </CardContent>
             </Card>
@@ -64,11 +64,11 @@ export default function Home() {
             <Card>
               <CardHeader className="flex flex-row items-center gap-2 pb-2">
                 <BookOpen className="h-5 w-5 text-primary" />
-                <CardTitle className="text-base">随时复习</CardTitle>
+                <CardTitle className="text-base">知识沉淀</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-muted-foreground">
-                  所有闪卡保存在你的卡片库中，随时随地复习回顾
+                  文章自动转闪卡，配合复习库，把输入内容变成长期可用的能力
                 </p>
               </CardContent>
             </Card>
