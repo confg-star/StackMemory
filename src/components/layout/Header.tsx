@@ -2,17 +2,27 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
-import { createClient } from '@/lib/supabase/client'
+import { createClient, hasSupabaseEnv } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Sparkles } from 'lucide-react'
 import { UserMenu } from './UserMenu'
 
 export function Header() {
-  const [user, setUser] = useState<any>(null)
+  const [user, setUser] = useState<unknown | null>(null)
   const [mounted, setMounted] = useState(false)
 
   const checkSession = useCallback(async () => {
+    if (!hasSupabaseEnv) {
+      setUser(null)
+      return
+    }
+
     const supabase = createClient()
+    if (!supabase) {
+      setUser(null)
+      return
+    }
+
     try {
       const { data: { session } } = await supabase.auth.getSession()
       setUser(session?.user ?? null)
@@ -24,9 +34,17 @@ export function Header() {
 
   useEffect(() => {
     setMounted(true)
+
+    if (!hasSupabaseEnv) {
+      setUser(null)
+      return
+    }
+
     checkSession()
 
     const supabase = createClient()
+    if (!supabase) return
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       console.log('Auth state changed:', session?.user?.email)
       setUser(session?.user ?? null)
