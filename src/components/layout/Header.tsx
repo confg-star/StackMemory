@@ -97,12 +97,6 @@ export function Header() {
           <Link href="/tasks">
             <Button variant="ghost" size="sm">今日任务</Button>
           </Link>
-          <Link href="/roadmap">
-            <Button variant="ghost" size="sm">学习路线</Button>
-          </Link>
-          <Link href="/tasks">
-            <Button variant="ghost" size="sm">今日任务</Button>
-          </Link>
           <Link href="/deck">
             <Button variant="ghost" size="sm">我的卡片</Button>
           </Link>
