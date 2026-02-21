@@ -1,0 +1,12 @@
+services:
+  stackmemory:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: stackmemory
+    restart: unless-stopped
+    ports:
+      - "3011:3011"
+    environment:
+      - NODE_ENV=production
+      - PORT=3011
