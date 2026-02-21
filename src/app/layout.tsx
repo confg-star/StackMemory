@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import "./globals.css";
+// 临时禁用全局 CSS：修复 Next.js CSS loader 崩溃导致的 500
+
 import { Header } from "@/components/layout/Header";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Toaster } from "@/components/ui/sonner";

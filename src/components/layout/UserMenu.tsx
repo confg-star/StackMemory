@@ -45,6 +45,10 @@ export function UserMenu({ user }: UserMenuProps) {
   const handleSignOut = async () => {
     setOpen(false)
     const supabase = createClient()
+    if (!supabase) {
+      window.location.reload()
+      return
+    }
     await supabase.auth.signOut()
     window.location.reload()
   }
