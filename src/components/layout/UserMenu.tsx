@@ -11,17 +11,35 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { LogOut, User } from 'lucide-react'
-import { createClient } from '@/lib/supabase/client'
+import { LogOut } from 'lucide-react'
+import { createClient, hasSupabaseEnv } from '@/lib/supabase/client'
+import { LocalUser } from '@/lib/auth/local-auth'
 
-interface UserMenuProps {
-  user?: any
+interface SupabaseUser {
+  email?: string
+  user_metadata?: {
+    avatar_url?: string
+    full_name?: string
+    name?: string
+  }
 }
 
-export function UserMenu({ user }: UserMenuProps) {
+interface UserMenuProps {
+  user?: SupabaseUser | null
+  localUser?: LocalUser | null
+  onSignOut?: () => void
+}
+
+function isLocalUser(user: SupabaseUser | LocalUser): user is LocalUser {
+  return 'id' in user && 'name' in user && 'createdAt' in user
+}
+
+export function UserMenu({ user, localUser, onSignOut }: UserMenuProps) {
   const [open, setOpen] = useState(false)
 
-  if (!user) {
+  const activeUser = localUser || user
+
+  if (!activeUser) {
     return (
       <Link href="/auth">
         <Button variant="ghost" size="sm">
@@ -31,25 +49,29 @@ export function UserMenu({ user }: UserMenuProps) {
     )
   }
 
-  // 从 user 对象中提取信息
-  const avatarUrl = user.user_metadata?.avatar_url || user.avatar_url
-  const name = user.user_metadata?.full_name || user.user_metadata?.name || user.name || user.email?.split('@')[0] || '用户'
-  const email = user.email
-
-  console.log('UserMenu - user:', user)
-  console.log('UserMenu - avatarUrl:', avatarUrl)
-  console.log('UserMenu - name:', name)
-
+  const isLocal = isLocalUser(activeUser)
+  const avatarUrl = isLocal ? undefined : activeUser.user_metadata?.avatar_url
+  const name = isLocal 
+    ? activeUser.name 
+    : (activeUser.user_metadata?.full_name || activeUser.user_metadata?.name || activeUser.email?.split('@')[0] || '用户')
+  const email = activeUser.email
   const initials = name.charAt(0).toUpperCase()
 
   const handleSignOut = async () => {
     setOpen(false)
-    const supabase = createClient()
-    if (!supabase) {
+    
+    if (localUser && onSignOut) {
+      onSignOut()
       window.location.reload()
       return
     }
-    await supabase.auth.signOut()
+
+    if (hasSupabaseEnv) {
+      const supabase = createClient()
+      if (supabase) {
+        await supabase.auth.signOut()
+      }
+    }
     window.location.reload()
   }
 

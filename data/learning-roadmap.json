@@ -1,0 +1,191 @@
+{
+  "phases": [
+    {
+      "id": "phase-1",
+      "title": "阶段 1：语言补齐（Python + TypeScript）",
+      "weeks": "第 1-2 周",
+      "goal": "从 Java 基础过渡到 Agent 常用语言栈，能写小工具。",
+      "focus": [
+        "Python：函数、类、typing、asyncio、requests",
+        "TypeScript：类型系统、async/await、Node 基础",
+        "CLI 工具开发与 Git 提交流程"
+      ],
+      "deliverables": ["完成 5 个小脚本", "提交 1 篇学习复盘", "建立统一开发环境"],
+      "tasks": [
+        { "id": "t1-1", "title": "Python 基础语法", "week": 1, "day": 1, "type": "学习", "status": "pending" },
+        { "id": "t1-2", "title": "Python typing 练习", "week": 1, "day": 2, "type": "实操", "status": "pending" },
+        { "id": "t1-3", "title": "asyncio 异步编程", "week": 1, "day": 3, "type": "学习", "status": "pending" },
+        { "id": "t1-4", "title": "写 URL 抓取脚本", "week": 1, "day": 4, "type": "实操", "status": "pending" },
+        { "id": "t1-5", "title": "TypeScript 类型系统", "week": 1, "day": 5, "type": "学习", "status": "pending" },
+        { "id": "t1-6", "title": "Node.js 基础", "week": 2, "day": 1, "type": "学习", "status": "pending" },
+        { "id": "t1-7", "title": "CLI 工具开发", "week": 2, "day": 2, "type": "实操", "status": "pending" },
+        { "id": "t1-8", "title": "Git 工作流实践", "week": 2, "day": 3, "type": "实操", "status": "pending" },
+        { "id": "t1-9", "title": "阶段复盘", "week": 2, "day": 5, "type": "复盘", "status": "pending" }
+      ]
+    },
+    {
+      "id": "phase-2",
+      "title": "阶段 2：LLM 与结构化输出",
+      "weeks": "第 3-4 周",
+      "goal": "掌握模型调用与稳定输出，避免能跑但不稳。",
+      "focus": [
+        "Prompt 模板化与 JSON 输出约束",
+        "超时、重试、fallback 机制",
+        "内容抓取 -> 知识提炼 -> 存储链路"
+      ],
+      "deliverables": ["可复用的解析服务 1 套", "错误处理策略文档 1 份"],
+      "tasks": [
+        { "id": "t2-1", "title": "LLM API 调用基础", "week": 3, "day": 1, "type": "学习", "status": "pending" },
+        { "id": "t2-2", "title": "Prompt 模板设计", "week": 3, "day": 2, "type": "学习", "status": "pending" },
+        { "id": "t2-3", "title": "JSON 输出约束", "week": 3, "day": 3, "type": "实操", "status": "pending" },
+        { "id": "t2-4", "title": "错误处理机制", "week": 3, "day": 4, "type": "学习", "status": "pending" },
+        { "id": "t2-5", "title": "重试策略实现", "week": 3, "day": 5, "type": "实操", "status": "pending" },
+        { "id": "t2-6", "title": "内容抓取链路", "week": 4, "day": 1, "type": "实操", "status": "pending" },
+        { "id": "t2-7", "title": "知识提炼流程", "week": 4, "day": 2, "type": "实操", "status": "pending" },
+        { "id": "t2-8", "title": "解析服务整合", "week": 4, "day": 3, "type": "实操", "status": "pending" },
+        { "id": "t2-9", "title": "阶段复盘", "week": 4, "day": 5, "type": "复盘", "status": "pending" }
+      ]
+    },
+    {
+      "id": "phase-3",
+      "title": "阶段 3：Agent 核心能力",
+      "weeks": "第 5-8 周",
+      "goal": "完成工具调用、任务编排、记忆管理。",
+      "focus": [
+        "Tool Calling 参数约束与执行",
+        "短期/长期记忆分层设计",
+        "Heartbeat/Cron 自动化执行"
+      ],
+      "deliverables": ["Agent 工作流 v1", "每周自动学习汇报"],
+      "tasks": [
+        { "id": "t3-1", "title": "Tool Calling 基础", "week": 5, "day": 1, "type": "学习", "status": "pending" },
+        { "id": "t3-2", "title": "参数约束设计", "week": 5, "day": 2, "type": "学习", "status": "pending" },
+        { "id": "t3-3", "title": "工具执行引擎", "week": 5, "day": 3, "type": "实操", "status": "pending" },
+        { "id": "t3-4", "title": "短期记忆设计", "week": 6, "day": 1, "type": "学习", "status": "pending" },
+        { "id": "t3-5", "title": "长期记忆设计", "week": 6, "day": 2, "type": "学习", "status": "pending" },
+        { "id": "t3-6", "title": "记忆分层实现", "week": 6, "day": 3, "type": "实操", "status": "pending" },
+        { "id": "t3-7", "title": "Heartbeat 机制", "week": 7, "day": 1, "type": "学习", "status": "pending" },
+        { "id": "t3-8", "title": "Cron 自动化", "week": 7, "day": 2, "type": "实操", "status": "pending" },
+        { "id": "t3-9", "title": "Agent 工作流 v1", "week": 8, "day": 1, "type": "实操", "status": "pending" },
+        { "id": "t3-10", "title": "阶段复盘", "week": 8, "day": 5, "type": "复盘", "status": "pending" }
+      ]
+    },
+    {
+      "id": "phase-4",
+      "title": "阶段 4：专属学习网站成型",
+      "weeks": "第 9-12 周",
+      "goal": "把 StackMemory 升级为学习操作系统。",
+      "focus": [
+        "学习路线看板 + 今日任务系统",
+        "复习队列 + 间隔重复机制",
+        "周报与学习画像"
+      ],
+      "deliverables": ["可持续学习网站 1 个", "可展示毕业项目 1 个"],
+      "tasks": [
+        { "id": "t4-1", "title": "学习路线看板", "week": 9, "day": 1, "type": "实操", "status": "pending" },
+        { "id": "t4-2", "title": "今日任务系统", "week": 9, "day": 2, "type": "实操", "status": "pending" },
+        { "id": "t4-3", "title": "复习队列设计", "week": 10, "day": 1, "type": "学习", "status": "pending" },
+        { "id": "t4-4", "title": "间隔重复算法", "week": 10, "day": 2, "type": "学习", "status": "pending" },
+        { "id": "t4-5", "title": "复习系统实现", "week": 10, "day": 3, "type": "实操", "status": "pending" },
+        { "id": "t4-6", "title": "周报生成", "week": 11, "day": 1, "type": "实操", "status": "pending" },
+        { "id": "t4-7", "title": "学习画像分析", "week": 11, "day": 2, "type": "实操", "status": "pending" },
+        { "id": "t4-8", "title": "毕业项目开发", "week": 12, "day": 1, "type": "实操", "status": "pending" },
+        { "id": "t4-9", "title": "项目展示准备", "week": 12, "day": 3, "type": "实操", "status": "pending" },
+        { "id": "t4-10", "title": "最终复盘", "week": 12, "day": 5, "type": "复盘", "status": "pending" }
+      ]
+    }
+  ],
+  "currentTasks": [
+    {
+      "id": "task-day1-py",
+      "title": "Python 快速补齐：函数 + typing + requests",
+      "type": "学习",
+      "difficulty": "简单",
+      "estimate": "45 分钟",
+      "objective": "掌握 Agent 常见 Python 代码结构，能读懂并改动脚本。",
+      "doneCriteria": "写出一个读取 URL 并输出 JSON 的脚本，成功运行一次。",
+      "knowledgePoints": [
+        {
+          "id": "kp-py-func",
+          "title": "Python 函数定义与参数",
+          "description": "def、*args、**kwargs、类型注解",
+          "materials": [
+            { "title": "Python 函数教程", "url": "https://docs.python.org/zh-cn/3/tutorial/controlflow.html#defining-functions", "type": "article" }
+          ]
+        },
+        {
+          "id": "kp-py-typing",
+          "title": "Python typing 模块",
+          "description": "List、Dict、Optional、Union 等类型提示",
+          "materials": [
+            { "title": "typing 模块文档", "url": "https://docs.python.org/zh-cn/3/library/typing.html", "type": "article" }
+          ]
+        },
+        {
+          "id": "kp-py-requests",
+          "title": "requests 库基础",
+          "description": "HTTP 请求、响应处理、JSON 解析",
+          "materials": [
+            { "title": "requests 快速上手", "url": "https://requests.readthedocs.io/en/latest/user/quickstart/", "type": "article" }
+          ]
+        }
+      ],
+      "materials": [
+        { "title": "Python 官方文档", "url": "https://docs.python.org/zh-cn/3/", "type": "article" },
+        { "title": "Python 入门视频教程", "url": "https://www.bilibili.com/video/BV1qW4y1a7fU", "type": "video" }
+      ]
+    },
+    {
+      "id": "task-day1-cli",
+      "title": "实操：写一个内容抓取 CLI",
+      "type": "实操",
+      "difficulty": "中等",
+      "estimate": "60 分钟",
+      "objective": "把输入链接到输出正文摘要跑通。",
+      "doneCriteria": "CLI 支持传入 URL，输出标题 + 200 字摘要，并提交到 Git。",
+      "knowledgePoints": [
+        {
+          "id": "kp-cli-argparse",
+          "title": "argparse 命令行参数解析",
+          "description": "定义参数、解析输入、帮助信息",
+          "materials": [
+            { "title": "argparse 教程", "url": "https://docs.python.org/zh-cn/3/howto/argparse.html", "type": "article" }
+          ]
+        },
+        {
+          "id": "kp-cli-beautifulsoup",
+          "title": "BeautifulSoup 网页解析",
+          "description": "HTML 解析、元素选择、文本提取",
+          "materials": [
+            { "title": "BeautifulSoup 文档", "url": "https://www.crummy.com/software/BeautifulSoup/bs4/doc/", "type": "article" }
+          ]
+        }
+      ],
+      "materials": [
+        { "title": "CLI 开发最佳实践", "url": "https://realpython.com/command-line-interfaces-python-argparse/", "type": "article" }
+      ]
+    },
+    {
+      "id": "task-day1-review",
+      "title": "复盘：记录今天 3 个坑 + 1 个下一步动作",
+      "type": "复盘",
+      "difficulty": "简单",
+      "estimate": "15 分钟",
+      "objective": "形成稳定复盘习惯，减少重复踩坑。",
+      "doneCriteria": "在学习日志里写下 3 个问题和 1 个可执行改进。",
+      "knowledgePoints": [
+        {
+          "id": "kp-review-method",
+          "title": "复盘方法论",
+          "description": "KPT 法：Keep、Problem、Try",
+          "materials": [
+            { "title": "如何高效复盘", "url": "https://www.ruanyifeng.com/blog/2019/03/weekly-review.html", "type": "article" }
+          ]
+        }
+      ],
+      "materials": [
+        { "title": "复盘模板", "url": "https://www.notion.so/templates/review", "type": "article" }
+      ]
+    }
+  ]
+}

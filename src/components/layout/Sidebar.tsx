@@ -9,7 +9,7 @@ const navItems = [
   { href: '/roadmap', label: '学习路线' },
   { href: '/tasks', label: '今日任务' },
   { href: '/deck', label: '我的卡片' },
-  { href: '/create', label: '创建卡片' },
+  { href: '/create', label: '行动中心' },
 ]
 
 export function Sidebar() {

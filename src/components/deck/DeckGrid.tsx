@@ -1,7 +1,7 @@
 'use client'
 
 import { Flashcard } from './Flashcard'
-import { CardWithTags } from '@/app/actions/get-cards'
+import { CardWithTags } from '@/lib/data-provider/interfaces'
 import { Card } from '@/components/ui/card'
 import { Loader2 } from 'lucide-react'
 

@@ -2,11 +2,13 @@
 
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Loader2, RotateCw, Save, Copy, Check } from 'lucide-react'
 import { Flashcard } from '@/lib/deepseek'
 import { saveCards } from '@/app/actions/save-card'
+import { useRoute } from '@/lib/context/RouteContext'
+import { toast } from 'sonner'
 
 interface CardPreviewProps {
   cards: Flashcard[]
@@ -19,14 +21,26 @@ export function CardPreview({ cards, sourceUrl, onReset }: CardPreviewProps) {
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null)
+  const { currentRoute } = useRoute()
 
   const handleSave = async () => {
+    if (!currentRoute?.id) {
+      toast.error('缺少 routeId，已拦截保存')
+      return
+    }
+
     setSaving(true)
     try {
-      await saveCards(cards, sourceUrl)
+      const result = await saveCards(cards, sourceUrl, undefined, currentRoute.id)
+      if (!result.success) {
+        toast.error(result.error || '保存失败')
+        return
+      }
       setSaved(true)
+      toast.success('保存成功')
     } catch (error) {
       console.error('保存失败:', error)
+      toast.error('保存失败')
     } finally {
       setSaving(false)
     }

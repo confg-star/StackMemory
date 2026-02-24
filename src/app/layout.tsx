@@ -5,6 +5,8 @@ import "./globals.css";
 import { Header } from "@/components/layout/Header";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Toaster } from "@/components/ui/sonner";
+import { LocalAuthProvider } from "@/lib/auth/auth-context";
+import { RouteProvider } from "@/lib/context/RouteContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -31,14 +33,18 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen bg-background`}
       >
-        <Header />
-        <div className="flex">
-          <Sidebar />
-          <main className="flex-1 container py-6">
-            {children}
-          </main>
-        </div>
-        <Toaster />
+        <LocalAuthProvider>
+          <RouteProvider>
+            <Header />
+            <div className="flex">
+              <Sidebar />
+              <main className="flex-1 container py-6 md:pl-8 lg:pl-12">
+                {children}
+              </main>
+            </div>
+            <Toaster />
+          </RouteProvider>
+        </LocalAuthProvider>
       </body>
     </html>
   );

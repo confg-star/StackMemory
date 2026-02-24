@@ -1,4 +1,23 @@
 services:
+  postgres:
+    image: postgres:16
+    container_name: stackmemory-postgres
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=stackmemory
+      - POSTGRES_USER=stackuser
+      - POSTGRES_PASSWORD=stackpass
+    volumes:
+      - ./pgdata:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U stackuser -d stackmemory"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   stackmemory:
     build:
       context: .
@@ -7,6 +26,17 @@ services:
     restart: unless-stopped
     ports:
       - "3011:3011"
+    env_file:
+      - .env
     environment:
       - NODE_ENV=production
       - PORT=3011
+      - DATA_PROVIDER=local_pg
+      - LOCAL_PG_HOST=postgres
+      - LOCAL_PG_PORT=5432
+      - LOCAL_PG_DB=stackmemory
+      - LOCAL_PG_USER=stackuser
+      - LOCAL_PG_PASSWORD=stackpass
+    depends_on:
+      postgres:
+        condition: service_healthy

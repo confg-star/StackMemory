@@ -24,6 +24,10 @@
 .DS_Store
 *.pem
 
+# local runtime data
+/.tmp/
+/pgdata/
+
 # debug
 npm-debug.log*
 yarn-debug.log*

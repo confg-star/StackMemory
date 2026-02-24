@@ -6,54 +6,101 @@ import { createClient, hasSupabaseEnv } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Sparkles } from 'lucide-react'
 import { UserMenu } from './UserMenu'
+import { LocalUser, getStoredUser } from '@/lib/auth/local-auth'
+import { RouteSelector } from './RouteSelector'
+import { CreateRouteDialog } from './CreateRouteDialog'
+import { useRoute } from '@/lib/context/RouteContext'
+import { toast } from 'sonner'
+
+interface CreatedRoute {
+  id: string
+  user_id: string
+  topic: string
+  background: string | null
+  goals: string | null
+  weeks: number
+  roadmap_data: Record<string, unknown> | null
+  is_current: boolean
+  created_at: string
+  updated_at: string
+}
+
+interface SupabaseUser {
+  email?: string
+  user_metadata?: {
+    avatar_url?: string
+    full_name?: string
+    name?: string
+  }
+}
 
 export function Header() {
-  const [user, setUser] = useState<unknown | null>(null)
+  const [supabaseUser, setSupabaseUser] = useState<SupabaseUser | null>(null)
+  const [localUser, setLocalUser] = useState<LocalUser | null>(null)
   const [mounted, setMounted] = useState(false)
+  const { currentRoute, refreshRoutes, switchRoute, appendAndSelectRoute } = useRoute()
 
   const checkSession = useCallback(async () => {
     if (!hasSupabaseEnv) {
-      setUser(null)
-      return
+      return null
     }
 
     const supabase = createClient()
     if (!supabase) {
-      setUser(null)
-      return
+      return null
     }
 
     try {
       const { data: { session } } = await supabase.auth.getSession()
-      setUser(session?.user ?? null)
-    } catch (e) {
-      console.error('Session check error:', e)
-      setUser(null)
+      return session?.user as SupabaseUser | null
+    } catch {
+      return null
     }
   }, [])
 
   useEffect(() => {
-    setMounted(true)
-
-    if (!hasSupabaseEnv) {
-      setUser(null)
-      return
+    const local = getStoredUser()
+    const init = async () => {
+      setMounted(true)
+      setLocalUser(local)
+      
+      if (hasSupabaseEnv) {
+        const user = await checkSession()
+        setSupabaseUser(user)
+      }
     }
+    init()
 
-    checkSession()
+    if (!hasSupabaseEnv) return
 
     const supabase = createClient()
     if (!supabase) return
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      console.log('Auth state changed:', session?.user?.email)
-      setUser(session?.user ?? null)
+      setSupabaseUser(session?.user as SupabaseUser | null)
     })
 
     return () => subscription.unsubscribe()
   }, [checkSession])
 
-  // 避免 hydration 不匹配
+  const handleLocalSignOut = () => {
+    setLocalUser(null)
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('stackmemory-current-user')
+    }
+  }
+
+  const handleRouteCreated = async (route: CreatedRoute) => {
+    appendAndSelectRoute(route)
+
+    const switched = await switchRoute(route.id)
+    if (!switched) {
+      toast.error('路线已创建，但自动切换失败，请手动切换')
+    }
+
+    await refreshRoutes()
+  }
+
   if (!mounted) {
     return (
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -69,7 +116,7 @@ export function Header() {
               <Button variant="ghost" size="sm">我的卡片</Button>
             </Link>
             <Link href="/create">
-              <Button size="sm">创建卡片</Button>
+              <Button size="sm">行动中心</Button>
             </Link>
             <Link href="/auth">
               <Button variant="ghost" size="sm">登录</Button>
@@ -88,9 +135,21 @@ export function Header() {
             <Sparkles className="h-5 w-5 text-primary" />
             <span>栈记</span>
           </Link>
+          
+          {currentRoute && (
+            <div className="hidden md:flex items-center gap-1 text-sm text-muted-foreground">
+              <span className="w-2 h-2 rounded-full bg-green-500" />
+              <span className="truncate max-w-[150px]">{currentRoute.topic}</span>
+            </div>
+          )}
         </div>
 
         <nav className="flex items-center gap-2">
+          <RouteSelector />
+          <CreateRouteDialog onRouteCreated={handleRouteCreated} />
+          
+          <div className="w-px h-6 bg-border mx-1" />
+          
           <Link href="/roadmap">
             <Button variant="ghost" size="sm">学习路线</Button>
           </Link>
@@ -101,9 +160,9 @@ export function Header() {
             <Button variant="ghost" size="sm">我的卡片</Button>
           </Link>
           <Link href="/create">
-            <Button size="sm">创建卡片</Button>
+            <Button size="sm">行动中心</Button>
           </Link>
-          <UserMenu user={user} />
+          <UserMenu user={supabaseUser} localUser={localUser} onSignOut={handleLocalSignOut} />
         </nav>
       </div>
     </header>

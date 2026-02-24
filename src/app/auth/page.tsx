@@ -1,34 +1,81 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
-import { Loader2, Github, Mail } from 'lucide-react'
-import { signIn, signUp, signInWithGithub } from '@/app/actions/auth'
+import { Loader2, Github, Mail, User } from 'lucide-react'
+import { signIn as supabaseSignIn, signUp as supabaseSignUp, signInWithGithub } from '@/app/actions/auth'
+import { useLocalAuth } from '@/lib/auth/auth-context'
 import { useToast } from '@/components/ui/use-toast'
 
 export default function AuthPage() {
   const [isLogin, setIsLogin] = useState(true)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [name, setName] = useState('')
   const [loading, setLoading] = useState(false)
+  const [useSupabase, setUseSupabase] = useState(false)
   const router = useRouter()
   const { toast } = useToast()
+  const { user, signIn: localSignIn, signUp: localSignUp, loading: authLoading } = useLocalAuth()
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  useEffect(() => {
+    if (user && !authLoading) {
+      router.push('/deck')
+    }
+  }, [user, authLoading, router])
+
+  const handleLocalSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
 
     try {
       let result
       if (isLogin) {
-        result = await signIn(email, password)
+        result = await localSignIn(email, password)
       } else {
-        result = await signUp(email, password)
+        result = await localSignUp(email, password, name)
+      }
+
+      if (result.success) {
+        toast({
+          title: isLogin ? '登录成功' : '注册成功',
+          description: isLogin ? '欢迎回来！' : '账户已创建，欢迎使用栈记！',
+        })
+        router.push('/deck')
+        router.refresh()
+      } else {
+        toast({
+          title: '错误',
+          description: result.error || '操作失败',
+          variant: 'destructive',
+        })
+      }
+    } catch {
+      toast({
+        title: '错误',
+        description: '网络错误，请稍后重试',
+        variant: 'destructive',
+      })
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleSupabaseSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoading(true)
+
+    try {
+      let result
+      if (isLogin) {
+        result = await supabaseSignIn(email, password)
+      } else {
+        result = await supabaseSignUp(email, password)
       }
 
       if (result.success) {
@@ -44,7 +91,6 @@ export default function AuthPage() {
             title: '注册成功',
             description: '请检查邮箱验证链接（如果已启用），然后登录。',
           })
-          // 切换到登录模式
           setIsLogin(true)
         }
       } else {
@@ -69,7 +115,6 @@ export default function AuthPage() {
     setLoading(true)
     const result = await signInWithGithub()
     if (result.success && result.url) {
-      // 重定向到 GitHub 授权页面
       window.location.href = result.url
     } else if (result.error) {
       toast({
@@ -80,6 +125,8 @@ export default function AuthPage() {
       setLoading(false)
     }
   }
+
+  const handleSubmit = useSupabase ? handleSupabaseSubmit : handleLocalSubmit
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-muted/50 px-4">
@@ -93,27 +140,64 @@ export default function AuthPage() {
           </CardDescription>
         </CardHeader>
 
-        <CardContent>
-          {/* GitHub 登录 */}
-          <Button
-            variant="outline"
-            className="w-full mb-4"
-            onClick={handleGithubSignIn}
-            disabled={loading}
-          >
-            <Github className="mr-2 h-4 w-4" />
-            GitHub 登录
-          </Button>
-
-          <div className="relative my-4">
-            <Separator />
-            <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-card px-2 text-xs text-muted-foreground">
-              或
-            </span>
+        <CardContent className="space-y-4">
+          <div className="flex gap-2">
+            <Button
+              variant={!useSupabase ? 'default' : 'outline'}
+              size="sm"
+              className="flex-1"
+              onClick={() => setUseSupabase(false)}
+            >
+              <User className="mr-2 h-4 w-4" />
+              本地账户
+            </Button>
+            <Button
+              variant={useSupabase ? 'default' : 'outline'}
+              size="sm"
+              className="flex-1"
+              onClick={() => setUseSupabase(true)}
+            >
+              <Mail className="mr-2 h-4 w-4" />
+              Supabase
+            </Button>
           </div>
 
-          {/* 邮箱登录表单 */}
+          {useSupabase && (
+            <>
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={handleGithubSignIn}
+                disabled={loading}
+              >
+                <Github className="mr-2 h-4 w-4" />
+                GitHub 登录
+              </Button>
+
+              <div className="relative">
+                <Separator />
+                <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-card px-2 text-xs text-muted-foreground">
+                  或
+                </span>
+              </div>
+            </>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-4">
+            {!isLogin && (
+              <div className="space-y-2">
+                <Label htmlFor="name">昵称</Label>
+                <Input
+                  id="name"
+                  type="text"
+                  placeholder="你的昵称"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  disabled={loading}
+                />
+              </div>
+            )}
+
             <div className="space-y-2">
               <Label htmlFor="email">邮箱</Label>
               <Input
@@ -154,6 +238,12 @@ export default function AuthPage() {
               )}
             </Button>
           </form>
+
+          {!useSupabase && !isLogin && (
+            <p className="text-xs text-muted-foreground text-center">
+              本地账户数据保存在浏览器本地存储中
+            </p>
+          )}
         </CardContent>
 
         <CardFooter className="flex flex-col gap-2">

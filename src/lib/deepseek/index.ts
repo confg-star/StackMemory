@@ -1,3 +1,10 @@
+import {
+  isModelMultimodal,
+  getBestMultimodalModel,
+  validateModelForProduction,
+} from '@/lib/model-capability'
+import { logModelCall, ModelCallType } from '@/lib/model-call-logger'
+
 export interface Flashcard {
   question: string
   answer: string
@@ -19,18 +26,37 @@ export interface ParseResult {
  * @returns 解析结果
  */
 export async function callAI(content: string, sourceUrl?: string): Promise<ParseResult> {
+  const startTime = Date.now()
+  const callType: ModelCallType = 'content_parsing'
+  
   const apiKey = process.env.OPENROUTER_API_KEY
 
   if (!apiKey) {
+    const errorMsg = 'OPENROUTER_API_KEY 未配置'
+    logModelCall(callType, 'unknown', false, Date.now() - startTime, 'error', {
+      error: errorMsg,
+      metadata: { contentLength: content.length, sourceUrl },
+    })
     return {
       success: false,
       cards: [],
-      error: 'OPENROUTER_API_KEY 未配置',
+      error: errorMsg,
     }
   }
 
+  let model = process.env.AI_MODEL || 'qwen/qwen3-coder:free'
+  const configuredModel = model
+  
+  const validation = validateModelForProduction(model)
+  if (!validation.valid) {
+    console.warn(`[ModelCapability] ${validation.error}，内容解析为纯文本任务，继续使用配置模型: ${model}`)
+  }
+  
+  const isMultimodal = isModelMultimodal(model)
+  
+  console.log(`[ModelCapability] 使用模型: ${model}, 多模态: ${isMultimodal}`)
+
   const baseUrl = process.env.AI_API_URL || 'https://openrouter.ai/api/v1/chat/completions'
-  const model = process.env.AI_MODEL || 'qwen/qwen3-coder:free'
 
   const prompt = `你是一个技术面试辅导助手。请将以下技术内容转换为 3-5 个面试闪卡。
 
@@ -91,10 +117,15 @@ ${content}
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}))
       console.error('OpenRouter API 错误:', JSON.stringify(errorData))
+      const errorMsg = `API 错误 ${response.status}: ${errorData.error?.message || errorData.message || response.statusText}`
+      logModelCall(callType, model, isMultimodal, Date.now() - startTime, 'error', {
+        error: errorMsg,
+        metadata: { contentLength: content.length, sourceUrl },
+      })
       return {
         success: false,
         cards: [],
-        error: `API 错误 ${response.status}: ${errorData.error?.message || errorData.message || response.statusText}`,
+        error: errorMsg,
       }
     }
 
@@ -110,10 +141,15 @@ ${content}
     }
 
     if (!contentResponse) {
+      const errorMsg = 'API 返回空结果'
+      logModelCall(callType, model, isMultimodal, Date.now() - startTime, 'error', {
+        error: errorMsg,
+        metadata: { contentLength: content.length, sourceUrl },
+      })
       return {
         success: false,
         cards: [],
-        error: 'API 返回空结果',
+        error: errorMsg,
       }
     }
 
@@ -122,6 +158,10 @@ ${content}
       const parsed = JSON.parse(contentResponse)
 
       if (Array.isArray(parsed.cards)) {
+        logModelCall(callType, model, isMultimodal, Date.now() - startTime, 'success', {
+          outputTokens: data.usage?.completion_tokens,
+          metadata: { cardsCount: parsed.cards.length, sourceUrl },
+        })
         return {
           success: true,
           cards: parsed.cards.map((card: { question: string; answer: string; codeSnippet?: string }) => ({
@@ -140,6 +180,10 @@ ${content}
         try {
           const parsed = JSON.parse(jsonMatch[0])
           if (Array.isArray(parsed.cards)) {
+            logModelCall(callType, model, isMultimodal, Date.now() - startTime, 'success', {
+              outputTokens: data.usage?.completion_tokens,
+              metadata: { cardsCount: parsed.cards.length, sourceUrl },
+            })
             return {
               success: true,
               cards: parsed.cards.map((card: { question: string; answer: string; codeSnippet?: string }) => ({
@@ -155,6 +199,12 @@ ${content}
       }
     }
 
+    const parseError = '无法解析 API 返回结果'
+    logModelCall(callType, model, isMultimodal, Date.now() - startTime, 'error', {
+      error: parseError,
+      metadata: { contentLength: content.length, sourceUrl },
+    })
+
     return {
       success: false,
       cards: [],
@@ -162,10 +212,15 @@ ${content}
       sourceUrl,
     }
   } catch (error) {
+    const errorMsg = error instanceof Error ? error.message : 'Unknown error'
+    logModelCall(callType, model, isMultimodal, Date.now() - startTime, 'error', {
+      error: errorMsg,
+      metadata: { contentLength: content.length, sourceUrl },
+    })
     return {
       success: false,
       cards: [],
-      error: error instanceof Error ? error.message : 'Unknown error',
+      error: errorMsg,
       sourceUrl,
     }
   }

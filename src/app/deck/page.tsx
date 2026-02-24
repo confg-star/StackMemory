@@ -1,11 +1,13 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import { DeckGrid } from '@/components/deck/DeckGrid'
 import { FilterBar } from '@/components/deck/FilterBar'
-import { CardWithTags, getCards, getTags, deleteCard } from '@/app/actions/get-cards'
+import { CardWithTags } from '@/lib/data-provider/interfaces'
+import { getCards, getTags, deleteCard } from '@/app/actions/get-cards'
 import { toast } from 'sonner'
 import { Skeleton } from '@/components/ui/skeleton'
+import { useRoute } from '@/lib/context/RouteContext'
 
 export default function DeckPage() {
   const [cards, setCards] = useState<CardWithTags[]>([])
@@ -14,52 +16,80 @@ export default function DeckPage() {
   const [selectedTagId, setSelectedTagId] = useState<string | undefined>()
   const [searchQuery, setSearchQuery] = useState('')
   const [totalCount, setTotalCount] = useState(0)
+  const { currentRoute } = useRoute()
+  const requestVersionRef = useRef(0)
+  const latestTagsRef = useRef<{ id: string; name: string; color: string }[]>([])
 
-  // 加载标签
-  const loadTags = useCallback(async () => {
-    const result = await getTags()
-    if (result.success && result.tags) {
-      setTags(result.tags)
+  const loadData = useCallback(async (tag?: string, search?: string, isInitial = false) => {
+    const requestVersion = ++requestVersionRef.current
+
+    if (!currentRoute?.id) {
+      console.warn('[route-guard] blocked deck load without routeId')
+      setCards([])
+      setTotalCount(0)
+      if (isInitial && requestVersion === requestVersionRef.current) {
+        setLoading(false)
+      }
+      return
     }
-  }, [])
 
-  // 加载卡片
-  const loadCards = useCallback(async () => {
-    setLoading(true)
-    const result = await getCards({
-      tagId: selectedTagId,
-      search: searchQuery || undefined,
-    })
+    if (isInitial) setLoading(true)
+    
+    const [tagsResult, cardsResult] = await Promise.all([
+      isInitial ? getTags() : Promise.resolve({ success: true, tags: latestTagsRef.current }),
+      getCards({ tagId: tag, search: search || undefined, routeId: currentRoute.id })
+    ])
 
-    if (result.success && result.cards) {
-      setCards(result.cards)
-      setTotalCount(result.total || 0)
+    if (requestVersion !== requestVersionRef.current) {
+      return
     }
+
+    if (isInitial && tagsResult.success && tagsResult.tags) {
+      latestTagsRef.current = tagsResult.tags
+      setTags(tagsResult.tags)
+    }
+
+    if (cardsResult.success && cardsResult.cards) {
+      setCards(cardsResult.cards)
+      setTotalCount(cardsResult.total || 0)
+    } else {
+      setCards([])
+      setTotalCount(0)
+    }
+    
     setLoading(false)
-  }, [selectedTagId, searchQuery])
+  }, [currentRoute])
 
-  // 初始加载
   useEffect(() => {
-    loadTags()
-    loadCards()
-  }, [loadTags, loadCards])
+    const timer = window.setTimeout(() => {
+      void loadData(undefined, undefined, true)
+    }, 0)
+    return () => window.clearTimeout(timer)
+  }, [loadData])
 
-  // 处理标签选择
+  useEffect(() => {
+    const handler = () => {
+      void loadData(selectedTagId, searchQuery, true)
+    }
+    window.addEventListener('route-changed', handler)
+    return () => window.removeEventListener('route-changed', handler)
+  }, [loadData, searchQuery, selectedTagId])
+
   const handleTagSelect = (tagId?: string) => {
     setSelectedTagId(tagId)
+    loadData(tagId, searchQuery)
   }
 
-  // 处理搜索
   const handleSearch = (query: string) => {
     setSearchQuery(query)
+    loadData(selectedTagId, query)
   }
 
-  // 处理删除
   const handleDelete = async (cardId: string) => {
     const result = await deleteCard(cardId)
     if (result.success) {
       toast.success('卡片已删除')
-      loadCards()
+      loadData(selectedTagId, searchQuery)
     } else {
       toast.error(result.error || '删除失败')
     }
@@ -77,7 +107,6 @@ export default function DeckPage() {
       </div>
 
       {loading ? (
-        // 加载骨架屏
         <div className="space-y-4">
           <div className="flex gap-2 flex-wrap">
             <Skeleton className="h-8 w-20" />
@@ -107,7 +136,6 @@ export default function DeckPage() {
           />
 
           {cards.length === 0 ? (
-            // 空状态
             <div className="text-center py-12">
               <div className="text-6xl mb-4">📚</div>
               <h3 className="text-xl font-semibold mb-2">
