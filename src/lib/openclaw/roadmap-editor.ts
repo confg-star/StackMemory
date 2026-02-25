@@ -268,10 +268,10 @@ function normalizeRoadmapData(raw: unknown): RoadmapData {
         })
     : []
 
-  const currentTasks = Array.isArray(raw.currentTasks)
+  const currentTasks: LearningTask[] = Array.isArray(raw.currentTasks)
     ? raw.currentTasks
         .filter((task): task is Record<string, unknown> => isRecord(task) && typeof task.id === 'string' && typeof task.title === 'string')
-        .map((task) => ({
+        .map((task): LearningTask => ({
           id: String(task.id),
           title: String(task.title),
           week: Number.isInteger(task.week) && Number(task.week) > 0 ? Number(task.week) : 1,
