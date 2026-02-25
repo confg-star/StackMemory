@@ -5,6 +5,61 @@ export interface RouteTimelineTask {
   day?: number
   type: '学习' | '实操' | '复盘'
   status: 'pending' | 'in_progress' | 'completed'
+  difficulty?: '简单' | '中等' | '进阶'
+  estimate?: string
+  objective?: string
+  doneCriteria?: string
+  materials?: Array<{
+    title: string
+    url: string
+    type: 'article' | 'video'
+    isGenerated?: boolean
+    content?: string
+  }>
+  knowledgePoints?: Array<{
+    id: string
+    title: string
+    description?: string
+    materials: Array<{
+      title: string
+      url: string
+      type: 'article' | 'video'
+      isGenerated?: boolean
+      content?: string
+    }>
+  }>
+}
+
+export function normalizeTaskDaysByWeek<T extends { week: number; day?: number }>(tasks: T[]): T[] {
+  if (tasks.length === 0) return tasks
+
+  const normalized = [...tasks]
+  const weekBuckets = new Map<number, Array<{ task: T; index: number }>>()
+
+  tasks.forEach((task, index) => {
+    const safeWeek = Number.isInteger(task.week) && task.week > 0 ? task.week : 1
+    const bucket = weekBuckets.get(safeWeek) || []
+    bucket.push({ task: { ...task, week: safeWeek }, index })
+    weekBuckets.set(safeWeek, bucket)
+  })
+
+  for (const [, bucket] of weekBuckets) {
+    bucket
+      .sort((a, b) => {
+        const dayA = Number.isInteger(a.task.day) && (a.task.day as number) > 0 ? (a.task.day as number) : Number.MAX_SAFE_INTEGER
+        const dayB = Number.isInteger(b.task.day) && (b.task.day as number) > 0 ? (b.task.day as number) : Number.MAX_SAFE_INTEGER
+        if (dayA !== dayB) return dayA - dayB
+        return a.index - b.index
+      })
+      .forEach((item, position) => {
+        normalized[item.index] = {
+          ...item.task,
+          day: position + 1,
+        }
+      })
+  }
+
+  return normalized
 }
 
 export const TASK_DATE_RANGE_DAYS = 30

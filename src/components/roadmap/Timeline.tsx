@@ -168,16 +168,44 @@ export function Timeline({ phases, currentWeek = 1, taskStatus = {}, statusKeyRe
               
               <div className="grid gap-2">
                 {tasks.map(task => (
-                  <button 
+                  <div
                     key={task.id}
-                    type="button"
-                    onClick={() => onTaskNavigate ? onTaskNavigate(task) : onTaskClick?.(task)}
-                    disabled={disableTaskActions}
-                    className={`flex items-center gap-3 p-3 rounded-lg border transition-all duration-200 hover:shadow-md cursor-pointer text-left w-full disabled:cursor-not-allowed disabled:opacity-65 ${getStatusColor(task.status)}`}
+                    role="button"
+                    tabIndex={disableTaskActions ? -1 : 0}
+                    onClick={() => {
+                      if (disableTaskActions) return
+                      if (onTaskNavigate) {
+                        onTaskNavigate(task)
+                        return
+                      }
+                      onTaskClick?.(task)
+                    }}
+                    onKeyDown={(event) => {
+                      if (disableTaskActions) return
+                      if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault()
+                        if (onTaskNavigate) {
+                          onTaskNavigate(task)
+                          return
+                        }
+                        onTaskClick?.(task)
+                      }
+                    }}
+                    className={`flex items-center gap-3 p-3 rounded-lg border transition-all duration-200 hover:shadow-md cursor-pointer text-left w-full ${disableTaskActions ? 'cursor-not-allowed opacity-65' : ''} ${getStatusColor(task.status)}`}
                   >
-                    <div className="flex-shrink-0 mt-0.5">
+                    <button
+                      type="button"
+                      aria-label={`切换任务状态：${task.title}`}
+                      className="flex-shrink-0 mt-0.5 rounded-full"
+                      disabled={disableTaskActions}
+                      onClick={(event) => {
+                        event.stopPropagation()
+                        if (disableTaskActions) return
+                        onTaskClick?.(task)
+                      }}
+                    >
                       {getStatusIcon(task.status)}
-                    </div>
+                    </button>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="text-sm font-medium truncate">{task.title}</span>
@@ -193,7 +221,7 @@ export function Timeline({ phases, currentWeek = 1, taskStatus = {}, statusKeyRe
                         <span className="text-xs px-2 py-1 rounded-full bg-muted text-muted-foreground">Day {task.day}</span>
                       </div>
                     )}
-                  </button>
+                  </div>
                 ))}
               </div>
             </div>

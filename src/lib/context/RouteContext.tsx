@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, useCallback, useRef, ReactNode } from 'react'
 import { trackEvent } from '@/lib/telemetry'
+import { getStoredUser } from '@/lib/auth/local-auth'
 
 interface Route {
   id: string
@@ -28,6 +29,15 @@ interface RouteContextType {
 
 const RouteContext = createContext<RouteContextType | null>(null)
 
+function getCurrentRouteStorageKey() {
+  if (typeof window === 'undefined') return 'stackmemory-current-route'
+  const localUser = getStoredUser()
+  if (localUser?.id) {
+    return `stackmemory-current-route:${localUser.id}`
+  }
+  return 'stackmemory-current-route'
+}
+
 export function RouteProvider({ children }: { children: ReactNode }) {
   const [currentRoute, setCurrentRoute] = useState<Route | null>(null)
   const [routes, setRoutes] = useState<Route[]>([])
@@ -53,13 +63,13 @@ export function RouteProvider({ children }: { children: ReactNode }) {
     }
 
     const storedRouteId = typeof window !== 'undefined'
-      ? localStorage.getItem('stackmemory-current-route')
+      ? localStorage.getItem(getCurrentRouteStorageKey())
       : null
     const storedRoute = storedRouteId
       ? nextRoutes.find((r: Route) => r.id === storedRouteId)
       : null
 
-    return storedRoute || nextRoutes[0]
+    return storedRoute || null
   }, [])
 
   const refreshRoutes = useCallback(async () => {
@@ -95,9 +105,9 @@ export function RouteProvider({ children }: { children: ReactNode }) {
 
       if (typeof window !== 'undefined') {
         if (current) {
-          localStorage.setItem('stackmemory-current-route', current.id)
+          localStorage.setItem(getCurrentRouteStorageKey(), current.id)
         } else {
-          localStorage.removeItem('stackmemory-current-route')
+          localStorage.removeItem(getCurrentRouteStorageKey())
         }
       }
     } catch (err) {
@@ -172,7 +182,7 @@ export function RouteProvider({ children }: { children: ReactNode }) {
         setCurrentRoute(newCurrent)
         
         if (typeof window !== 'undefined') {
-          localStorage.setItem('stackmemory-current-route', routeId)
+          localStorage.setItem(getCurrentRouteStorageKey(), routeId)
         }
         dispatchRouteChanged(newCurrent)
 
@@ -224,7 +234,7 @@ export function RouteProvider({ children }: { children: ReactNode }) {
     setCurrentRoute(selectedRoute)
 
     if (typeof window !== 'undefined') {
-      localStorage.setItem('stackmemory-current-route', selectedRoute.id)
+      localStorage.setItem(getCurrentRouteStorageKey(), selectedRoute.id)
     }
 
     dispatchRouteChanged(selectedRoute)

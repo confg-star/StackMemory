@@ -1,6 +1,6 @@
 export type DataProviderType = 'supabase' | 'local_pg'
 
-export const DATA_PROVIDER = (process.env.DATA_PROVIDER as DataProviderType) || 'supabase'
+export const DATA_PROVIDER = (process.env.DATA_PROVIDER as DataProviderType) || 'local_pg'
 
 export const localPgConfig = {
   host: process.env.LOCAL_PG_HOST || 'localhost',

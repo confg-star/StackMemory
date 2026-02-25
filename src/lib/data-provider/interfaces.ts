@@ -96,6 +96,8 @@ export interface RouteRepository {
   }): Promise<{ success: boolean; route?: Route; error?: string }>
 
   switchRoute(userId: string, routeId: string): Promise<{ success: boolean; error?: string }>
+
+  deleteRoute(userId: string, routeId: string): Promise<{ success: boolean; error?: string; nextCurrentRouteId?: string | null }>
 }
 
 export interface RouteTaskRepository {

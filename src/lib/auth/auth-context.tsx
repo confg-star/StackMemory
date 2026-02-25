@@ -1,7 +1,17 @@
 'use client'
 
-import { createContext, useContext, useState, useCallback, ReactNode } from 'react'
-import { LocalUser, getStoredUser, setStoredUser, localSignIn, localSignUp, localSignOut } from '@/lib/auth/local-auth'
+import { createContext, useContext, useState, useCallback, ReactNode, useEffect } from 'react'
+import { LocalUser, getStoredUser, setStoredUser, localSignIn, localSignUp, localSignOut, LOCAL_AUTH_USER_COOKIE } from '@/lib/auth/local-auth'
+
+function setAuthCookie(userId: string) {
+  if (typeof document === 'undefined') return
+  document.cookie = `${LOCAL_AUTH_USER_COOKIE}=${encodeURIComponent(userId)}; Path=/; Max-Age=${60 * 60 * 24 * 30}; SameSite=Lax`
+}
+
+function clearAuthCookie() {
+  if (typeof document === 'undefined') return
+  document.cookie = `${LOCAL_AUTH_USER_COOKIE}=; Path=/; Max-Age=0; SameSite=Lax`
+}
 
 interface AuthContextType {
   user: LocalUser | null
@@ -22,11 +32,18 @@ export function LocalAuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<LocalUser | null>(getInitialUser)
   const [loading] = useState(false)
 
+  useEffect(() => {
+    if (user?.id) {
+      setAuthCookie(user.id)
+    }
+  }, [user])
+
   const handleSignIn = useCallback(async (email: string, password: string) => {
     const result = localSignIn(email, password)
     if (result.success && result.user) {
       setUser(result.user)
       setStoredUser(result.user)
+      setAuthCookie(result.user.id)
     }
     return result
   }, [])
@@ -36,6 +53,7 @@ export function LocalAuthProvider({ children }: { children: ReactNode }) {
     if (result.success && result.user) {
       setUser(result.user)
       setStoredUser(result.user)
+      setAuthCookie(result.user.id)
     }
     return result
   }, [])
@@ -43,6 +61,7 @@ export function LocalAuthProvider({ children }: { children: ReactNode }) {
   const handleSignOut = useCallback(async () => {
     localSignOut()
     setUser(null)
+    clearAuthCookie()
     return { success: true }
   }, [])
 

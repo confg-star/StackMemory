@@ -10,7 +10,7 @@ import { Timeline } from '@/components/roadmap/Timeline'
 import { ModuleErrorBoundary } from '@/components/common/ModuleErrorBoundary'
 import { CheckCircle2, Circle, Clock, List, Calendar, Loader2 } from 'lucide-react'
 import { useRoute } from '@/lib/context/RouteContext'
-import { buildRouteDateScope, buildTasksPath, toRouteTaskDateKey } from '@/lib/route-task-utils'
+import { buildRouteDateScope, buildTasksPath, normalizeTaskDaysByWeek, toRouteTaskDateKey } from '@/lib/route-task-utils'
 import Link from 'next/link'
 
 interface LearningPhase {
@@ -42,7 +42,17 @@ interface LearningTask {
   doneCriteria: string
 }
 
+interface LearningOverview {
+  whatIs: string
+  keyTechnologies: string[]
+  capabilities: string[]
+  commonScenarios: string[]
+  quickStartPath: string[]
+  efficientLearningTips: string[]
+}
+
 interface RoadmapData {
+  overview?: LearningOverview
   phases: LearningPhase[]
   currentTasks: LearningTask[]
 }
@@ -100,11 +110,19 @@ export default function RoadmapPage() {
       try {
         const data = currentRoute.roadmap_data as unknown as RoadmapData
         if (data && data.phases) {
+          const normalizedData: RoadmapData = {
+            ...data,
+            phases: data.phases.map((phase) => ({
+              ...phase,
+              tasks: phase.tasks ? normalizeTaskDaysByWeek(phase.tasks) : [],
+            })),
+          }
+
           if (requestVersion !== loadVersionRef.current) {
             return
           }
-          setRoadmapData(data)
-          setActivePhase(data.phases[0]?.id || 'phase-1')
+          setRoadmapData(normalizedData)
+          setActivePhase(normalizedData.phases[0]?.id || 'phase-1')
           setTaskStatus(loadTaskStatus(currentRoute.id))
         }
       } catch (err) {
@@ -270,6 +288,65 @@ export default function RoadmapPage() {
           </Card>
         </ModuleErrorBoundary>
       </div>
+
+      {roadmapData?.overview && (
+        <Card className="border-primary/20 bg-primary/[0.03]">
+          <CardHeader>
+            <CardTitle className="text-xl">先认识这条学习路线</CardTitle>
+            <p className="text-sm text-muted-foreground">先把全貌看懂，再做任务会更轻松。</p>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <p className="text-sm font-medium text-muted-foreground">这是什么</p>
+              <p className="mt-1 leading-7">{roadmapData.overview.whatIs}</p>
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-2">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">关键技术</p>
+                <ul className="mt-2 list-disc pl-5 space-y-1 text-sm">
+                  {roadmapData.overview.keyTechnologies.map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ul>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">可以实现什么</p>
+                <ul className="mt-2 list-disc pl-5 space-y-1 text-sm">
+                  {roadmapData.overview.capabilities.map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ul>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">常见应用场景</p>
+                <ul className="mt-2 list-disc pl-5 space-y-1 text-sm">
+                  {roadmapData.overview.commonScenarios.map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ul>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">建议学习顺序</p>
+                <ul className="mt-2 list-disc pl-5 space-y-1 text-sm">
+                  {roadmapData.overview.quickStartPath.map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+
+            <div>
+              <p className="text-sm font-medium text-muted-foreground">更高效、更轻松的学习建议</p>
+              <ul className="mt-2 list-disc pl-5 space-y-1 text-sm">
+                {roadmapData.overview.efficientLearningTips.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <Tabs defaultValue="timeline" className="w-full">
         <TabsList className="grid w-full max-w-md grid-cols-2">

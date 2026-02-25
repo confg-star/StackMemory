@@ -2,8 +2,8 @@
 
 import { Flashcard } from '@/lib/deepseek'
 import { getCardRepository } from '@/lib/data-provider'
-import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { resolveServerUserId } from '@/lib/server-user'
 
 export interface SaveCardsInput {
   cards: Flashcard[]
@@ -13,17 +13,11 @@ export interface SaveCardsInput {
 }
 
 async function getAuthUserId(): Promise<{ userId: string | null; error?: string }> {
-  const supabase = await createClient()
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser()
-
-  if (userError || !user) {
+  const result = await resolveServerUserId()
+  if (!result.userId) {
     return { userId: null, error: '请先登录后再保存' }
   }
-
-  return { userId: user.id }
+  return result
 }
 
 export async function saveCards(

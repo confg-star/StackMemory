@@ -17,12 +17,20 @@ export interface TimelineTask {
   day?: number
   type: '学习' | '实操' | '复盘'
   status: 'pending' | 'in_progress' | 'completed'
+  difficulty?: '简单' | '中等' | '进阶'
+  estimate?: string
+  objective?: string
+  doneCriteria?: string
+  materials?: LearningMaterial[]
+  knowledgePoints?: KnowledgePoint[]
 }
 
 export interface LearningMaterial {
   title: string
   url: string
   type: 'article' | 'video'
+  isGenerated?: boolean
+  content?: string
 }
 
 export interface KnowledgePoint {

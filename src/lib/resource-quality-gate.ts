@@ -2,6 +2,8 @@ export interface LearningMaterial {
   title: string
   url: string
   type: 'article' | 'video'
+  isGenerated?: boolean
+  content?: string
   relevance?: string
   isForeign?: boolean
 }
@@ -247,6 +249,20 @@ export async function validateMaterial(
   taskTitle: string,
   taskObjective: string
 ): Promise<MaterialValidationResult> {
+  if (material.isGenerated) {
+    return {
+      url: material.url || 'about:generated',
+      title: material.title,
+      accessible: true,
+      statusCode: 200,
+      responseTime: 0,
+      relevanceScore: 1,
+      relevanceReason: 'Agent 生成补充资料',
+      isForeign: false,
+      source: 'generated',
+    }
+  }
+
   const { isForeign, source } = isForeignSource(material.url)
   const accessibility = await checkUrlAccessibility(material.url)
   const relevance = calculateRelevance(material.title, taskTitle, taskObjective)

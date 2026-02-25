@@ -1,12 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { LocalPgRouteRepository } from '@/lib/data-provider/local-pg-repository'
+import { resolveServerUserId } from '@/lib/server-user'
 
 const routeRepository = new LocalPgRouteRepository()
 
-const DEMO_USER_ID = '00000000-0000-0000-0000-000000000001'
-
 export async function PUT(request: NextRequest) {
   try {
+    const { userId, error: authError } = await resolveServerUserId()
+    if (!userId) {
+      return NextResponse.json({ success: false, error: authError || '请先登录' }, { status: 401 })
+    }
+
     const body = await request.json()
     const { route_id } = body
 
@@ -17,7 +21,7 @@ export async function PUT(request: NextRequest) {
       )
     }
 
-    const switchResult = await routeRepository.switchRoute(DEMO_USER_ID, route_id)
+    const switchResult = await routeRepository.switchRoute(userId, route_id)
 
     if (!switchResult.success) {
       const status = switchResult.error?.includes('不存在') ? 404 : 500
@@ -27,7 +31,7 @@ export async function PUT(request: NextRequest) {
       )
     }
 
-    const currentRoute = await routeRepository.getRouteById(DEMO_USER_ID, route_id)
+    const currentRoute = await routeRepository.getRouteById(userId, route_id)
 
     return NextResponse.json({
       success: true,

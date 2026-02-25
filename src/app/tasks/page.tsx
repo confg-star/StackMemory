@@ -1,13 +1,13 @@
 'use client'
 
-import { Suspense, useState, useEffect, useRef } from 'react'
+import { Suspense, useState, useEffect, useRef, useMemo } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { TaskCard } from '@/components/tasks/TaskCard'
 import { ModuleErrorBoundary } from '@/components/common/ModuleErrorBoundary'
 import { useRoute } from '@/lib/context/RouteContext'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
-import { Loader2, ChevronLeft, ChevronRight, CalendarDays } from 'lucide-react'
+import { Loader2, ChevronLeft, ChevronRight, CalendarDays, Flame, CheckCircle2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Skeleton } from '@/components/ui/skeleton'
 import { trackEvent } from '@/lib/telemetry'
@@ -23,6 +23,7 @@ import {
   toRouteTaskDateKey,
   canShiftTaskDate,
   resolveTaskQueryDate,
+  normalizeTaskDaysByWeek,
   type RouteTimelineTask,
 } from '@/lib/route-task-utils'
 
@@ -30,7 +31,10 @@ interface RouteRoadmapData {
   phases?: Array<{
     tasks?: RouteTimelineTask[]
   }>
+  currentTasks?: LearningTask[]
 }
+
+const TASK_COMPLETION_STORAGE_KEY = 'stackmemory_task_completion'
 
 export default function TasksPage() {
   return (
@@ -63,6 +67,7 @@ function TasksPageContent() {
   const [highlightTaskId, setHighlightTaskId] = useState<string | null>(() => searchParams.get('taskId'))
   const [switchingDate, setSwitchingDate] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [completionVersion, setCompletionVersion] = useState(0)
   const { currentRoute, routes, switchRoute } = useRoute()
   const taskCacheRef = useRef<Map<string, LearningTask[]>>(new Map())
   const loadVersionRef = useRef(0)
@@ -242,7 +247,8 @@ function TasksPageContent() {
         }
 
         const data = currentRoute.roadmap_data as unknown as RouteRoadmapData
-        const timelineTasks = data?.phases?.flatMap((phase) => phase.tasks || []) || []
+        const timelineTasks = data?.phases?.flatMap((phase) => normalizeTaskDaysByWeek(phase.tasks || [])) || []
+        const currentTasks = data?.currentTasks || []
         const matchedTimeline = timelineTasks.filter((task) => toRouteTaskDateKey(task, currentRoute.created_at) === dateKey)
 
         if (matchedTimeline.length === 0) {
@@ -251,17 +257,20 @@ function TasksPageContent() {
           return
         }
 
-        const mappedTasks: LearningTask[] = matchedTimeline.map((task) => ({
-          id: task.id,
-          title: task.title,
-          type: task.type,
-          difficulty: '中等',
-          estimate: '45分钟',
-          objective: `完成 ${task.title}`,
-          doneCriteria: '按任务说明完成并记录学习结果',
-          materials: [],
-          knowledgePoints: [],
-        }))
+        const mappedTasks: LearningTask[] = matchedTimeline.map((task) => {
+          const fromCurrentTask = currentTasks.find((item) => item.id === task.id)
+          return {
+            id: task.id,
+            title: task.title,
+            type: task.type,
+            difficulty: task.difficulty || fromCurrentTask?.difficulty || '中等',
+            estimate: task.estimate || fromCurrentTask?.estimate || '45分钟',
+            objective: task.objective || fromCurrentTask?.objective || `完成 ${task.title}`,
+            doneCriteria: task.doneCriteria || fromCurrentTask?.doneCriteria || '按任务说明完成并记录学习结果',
+            materials: task.materials || fromCurrentTask?.materials || [],
+            knowledgePoints: task.knowledgePoints || fromCurrentTask?.knowledgePoints || [],
+          }
+        })
 
         if (requestVersion !== loadVersionRef.current) {
           return
@@ -328,6 +337,15 @@ function TasksPageContent() {
   }, [currentRoute?.id])
 
   useEffect(() => {
+    const handleCompletionChanged = () => {
+      setCompletionVersion((prev) => prev + 1)
+    }
+
+    window.addEventListener('task-completion-changed', handleCompletionChanged)
+    return () => window.removeEventListener('task-completion-changed', handleCompletionChanged)
+  }, [])
+
+  useEffect(() => {
     if (!highlightTaskId) return
     const timer = window.setTimeout(() => {
       const node = document.getElementById(`task-${highlightTaskId}`)
@@ -380,6 +398,39 @@ function TasksPageContent() {
   const completionScope = safeRouteId
     ? buildRouteDateScope(safeRouteId, dateKey)
     : `none:${dateKey}`
+
+  const streakDays = useMemo(() => {
+    if (typeof window === 'undefined' || !safeRouteId) return 0
+    void completionVersion
+    try {
+      const raw = localStorage.getItem(TASK_COMPLETION_STORAGE_KEY)
+      if (!raw) return 0
+      const parsed = JSON.parse(raw) as Record<string, boolean>
+      const completedDateSet = new Set<string>()
+
+      Object.entries(parsed).forEach(([key, value]) => {
+        if (!value) return
+        if (!key.startsWith(`${safeRouteId}:`)) return
+        const [routeId, datePart] = key.split(':')
+        if (routeId === safeRouteId && /^\d{4}-\d{2}-\d{2}$/.test(datePart || '')) {
+          completedDateSet.add(datePart)
+        }
+      })
+
+      let streak = 0
+      let cursor = new Date()
+      while (true) {
+        const key = formatDateKey(cursor)
+        if (!completedDateSet.has(key)) break
+        streak += 1
+        cursor = shiftDate(cursor, -1)
+      }
+
+      return streak
+    } catch {
+      return 0
+    }
+  }, [safeRouteId, completionVersion])
 
   if (loading) {
     return (
@@ -449,6 +500,11 @@ function TasksPageContent() {
           <p className="text-muted-foreground mt-2">
             {currentRoute ? `当前路线：${currentRoute.topic} - ` : ''}你每天只需要完成这 3 件事：学一个点、做一个实操、写一次复盘。
           </p>
+          <div className="mt-3 inline-flex items-center gap-2 rounded-full border bg-amber-500/10 text-amber-700 px-3 py-1 text-sm">
+            <Flame className="h-4 w-4" />
+            连续学习 {streakDays} 天
+            {streakDays > 0 && <CheckCircle2 className="h-4 w-4 text-green-600" />}
+          </div>
         </div>
         <div className="flex items-center gap-2">
           <Button variant="outline" size="icon" disabled={switchingDate || !canGoPrev} onClick={() => changeDate(-1)}>

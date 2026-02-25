@@ -6,7 +6,7 @@ import { createClient, hasSupabaseEnv } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Sparkles } from 'lucide-react'
 import { UserMenu } from './UserMenu'
-import { LocalUser, getStoredUser } from '@/lib/auth/local-auth'
+import { LocalUser, getStoredUser, LOCAL_AUTH_USER_COOKIE } from '@/lib/auth/local-auth'
 import { RouteSelector } from './RouteSelector'
 import { CreateRouteDialog } from './CreateRouteDialog'
 import { useRoute } from '@/lib/context/RouteContext'
@@ -87,7 +87,10 @@ export function Header() {
     setLocalUser(null)
     if (typeof window !== 'undefined') {
       localStorage.removeItem('stackmemory-current-user')
+      localStorage.removeItem('stackmemory-current-route')
+      document.cookie = `${LOCAL_AUTH_USER_COOKIE}=; Path=/; Max-Age=0; SameSite=Lax`
     }
+    void refreshRoutes()
   }
 
   const handleRouteCreated = async (route: CreatedRoute) => {

@@ -1,12 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { LocalPgRouteRepository } from '@/lib/data-provider/local-pg-repository'
+import { resolveServerUserId } from '@/lib/server-user'
 
 const routeRepository = new LocalPgRouteRepository()
 
-const DEMO_USER_ID = '00000000-0000-0000-0000-000000000001'
-
 export async function GET(request: NextRequest) {
   try {
+    const { userId, error: authError } = await resolveServerUserId()
+    if (!userId) {
+      return NextResponse.json({ success: false, error: authError || '请先登录' }, { status: 401 })
+    }
+
     const { searchParams } = new URL(request.url)
     const limit = parseInt(searchParams.get('limit') || '20')
     const offset = parseInt(searchParams.get('offset') || '0')
@@ -18,7 +22,7 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    const result = await routeRepository.getRoutes(DEMO_USER_ID, { limit, offset })
+    const result = await routeRepository.getRoutes(userId, { limit, offset })
 
     return NextResponse.json({
       success: true,
@@ -40,6 +44,11 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    const { userId, error: authError } = await resolveServerUserId()
+    if (!userId) {
+      return NextResponse.json({ success: false, error: authError || '请先登录' }, { status: 401 })
+    }
+
     const body = await request.json()
     const { topic, background, goals, weeks, roadmap_data } = body
 
@@ -64,7 +73,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const result = await routeRepository.createRoute(DEMO_USER_ID, {
+    const result = await routeRepository.createRoute(userId, {
       topic: topic.trim(),
       background,
       goals,
@@ -88,6 +97,55 @@ export async function POST(request: NextRequest) {
     console.error('创建路线失败:', error)
     return NextResponse.json(
       { success: false, error: '创建路线失败' },
+      { status: 500 }
+    )
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const { userId, error: authError } = await resolveServerUserId()
+    if (!userId) {
+      return NextResponse.json({ success: false, error: authError || '请先登录' }, { status: 401 })
+    }
+
+    const { searchParams } = new URL(request.url)
+    let routeId = searchParams.get('routeId')?.trim()
+
+    if (!routeId) {
+      const body = await request.json().catch(() => ({})) as { route_id?: string }
+      routeId = body.route_id?.trim()
+    }
+
+    if (!routeId) {
+      return NextResponse.json(
+        { success: false, error: '请提供路线 ID (routeId 或 route_id)' },
+        { status: 400 }
+      )
+    }
+
+    const result = await routeRepository.deleteRoute(userId, routeId)
+
+    if (!result.success) {
+      const statusCode = result.error?.includes('不存在') ? 404 : 500
+      return NextResponse.json(
+        { success: false, error: result.error || '删除路线失败' },
+        { status: statusCode }
+      )
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: '路线删除成功',
+      data: {
+        deleted_route_id: routeId,
+        next_current_route_id: result.nextCurrentRouteId ?? null,
+      },
+    })
+  } catch (error) {
+    console.error('删除路线失败:', error)
+    return NextResponse.json(
+      { success: false, error: '删除路线失败' },
       { status: 500 }
     )
   }

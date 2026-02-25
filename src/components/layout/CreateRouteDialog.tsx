@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -28,6 +29,7 @@ interface CreatedRoute {
 
 export function CreateRouteDialog({ onRouteCreated }: CreateRouteDialogProps) {
   const [open, setOpen] = useState(false)
+  const [mounted, setMounted] = useState(false)
   const [loading, setLoading] = useState(false)
   const [topic, setTopic] = useState('')
   const [topicError, setTopicError] = useState<string | null>(null)
@@ -37,6 +39,10 @@ export function CreateRouteDialog({ onRouteCreated }: CreateRouteDialogProps) {
   const [weeksError, setWeeksError] = useState<string | null>(null)
   const inFlightRequestKeyRef = useRef<string | null>(null)
   const loadingRef = useRef(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   useEffect(() => {
     loadingRef.current = loading
@@ -196,100 +202,103 @@ export function CreateRouteDialog({ onRouteCreated }: CreateRouteDialogProps) {
     }
   }
 
-  if (!open) {
-    return (
+  return (
+    <>
       <Button variant="outline" size="sm" onClick={() => setOpen(true)} disabled={loading}>
         <Plus className="h-4 w-4 mr-1" />
         新建路线
       </Button>
-    )
-  }
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center animate-in fade-in duration-200">
-      <div className="absolute inset-0 bg-black/50" onClick={handleClose} />
-      <div className="relative z-10 w-full max-w-md mx-4 bg-background rounded-lg border shadow-lg p-6 animate-in zoom-in-95 duration-200">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <Map className="h-5 w-5 text-primary" />
-            <h2 className="text-lg font-semibold">新建学习路线</h2>
-          </div>
-          <Button variant="ghost" size="icon" onClick={handleClose} disabled={loading}>
-            <X className="h-4 w-4" />
-          </Button>
-        </div>
+      {mounted &&
+        open &&
+        createPortal(
+          <div className="fixed inset-0 z-50 flex items-center justify-center animate-in fade-in duration-200">
+            <div className="absolute inset-0 bg-black/50" onClick={handleClose} />
+            <div className="relative z-10 w-full max-w-md mx-4 bg-background rounded-lg border shadow-lg p-6 animate-in zoom-in-95 duration-200">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <Map className="h-5 w-5 text-primary" />
+                  <h2 className="text-lg font-semibold">新建学习路线</h2>
+                </div>
+                <Button variant="ghost" size="icon" onClick={handleClose} disabled={loading}>
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="topic">学习主题 *</Label>
-            <Input
-              id="topic"
-              placeholder="例如：Python 入门"
-              value={topic}
-              onChange={(e) => {
-                setTopic(e.target.value)
-                if (topicError) {
-                  setTopicError(null)
-                }
-              }}
-              required
-              aria-invalid={Boolean(topicError)}
-            />
-            {topicError && <p className="text-xs text-red-500">{topicError}</p>}
-          </div>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="topic">学习主题 *</Label>
+                  <Input
+                    id="topic"
+                    placeholder="例如：Python 入门"
+                    value={topic}
+                    onChange={(e) => {
+                      setTopic(e.target.value)
+                      if (topicError) {
+                        setTopicError(null)
+                      }
+                    }}
+                    required
+                    aria-invalid={Boolean(topicError)}
+                  />
+                  {topicError && <p className="text-xs text-red-500">{topicError}</p>}
+                </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="background">背景/基础</Label>
-            <Textarea
-              id="background"
-              placeholder="你的技术背景、已掌握的技能..."
-              value={background}
-              onChange={(e) => setBackground(e.target.value)}
-              rows={2}
-            />
-          </div>
+                <div className="space-y-2">
+                  <Label htmlFor="background">背景/基础</Label>
+                  <Textarea
+                    id="background"
+                    placeholder="你的技术背景、已掌握的技能..."
+                    value={background}
+                    onChange={(e) => setBackground(e.target.value)}
+                    rows={2}
+                  />
+                </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="goals">学习目标</Label>
-            <Textarea
-              id="goals"
-              placeholder="你想达到什么水平？薄弱点有哪些？"
-              value={goals}
-              onChange={(e) => setGoals(e.target.value)}
-              rows={2}
-            />
-          </div>
+                <div className="space-y-2">
+                  <Label htmlFor="goals">学习目标</Label>
+                  <Textarea
+                    id="goals"
+                    placeholder="你想达到什么水平？薄弱点有哪些？"
+                    value={goals}
+                    onChange={(e) => setGoals(e.target.value)}
+                    rows={2}
+                  />
+                </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="weeks">学习周期（周）</Label>
-            <Input
-              id="weeks"
-              type="number"
-              min={1}
-              max={52}
-              value={weeksInput}
-              onChange={(e) => {
-                setWeeksInput(e.target.value)
-                if (weeksError) {
-                  setWeeksError(null)
-                }
-              }}
-              aria-invalid={Boolean(weeksError)}
-            />
-            {weeksError && <p className="text-xs text-red-500">{weeksError}</p>}
-          </div>
+                <div className="space-y-2">
+                  <Label htmlFor="weeks">学习周期（周）</Label>
+                  <Input
+                    id="weeks"
+                    type="number"
+                    min={1}
+                    max={52}
+                    value={weeksInput}
+                    onChange={(e) => {
+                      setWeeksInput(e.target.value)
+                      if (weeksError) {
+                        setWeeksError(null)
+                      }
+                    }}
+                    aria-invalid={Boolean(weeksError)}
+                  />
+                  {weeksError && <p className="text-xs text-red-500">{weeksError}</p>}
+                </div>
 
-          <div className="flex justify-end gap-2 pt-2">
-            <Button type="button" variant="outline" onClick={handleClose} disabled={loading}>
-              取消
-            </Button>
-            <Button type="submit" disabled={loading}>
-              {loading && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-              {loading ? '创建中...' : '创建路线'}
-            </Button>
-          </div>
-        </form>
-      </div>
-    </div>
+                <div className="flex justify-end gap-2 pt-2">
+                  <Button type="button" variant="outline" onClick={handleClose} disabled={loading}>
+                    取消
+                  </Button>
+                  <Button type="submit" disabled={loading}>
+                    {loading && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+                    {loading ? '创建中...' : '创建路线'}
+                  </Button>
+                </div>
+              </form>
+            </div>
+          </div>,
+          document.body
+        )}
+    </>
   )
 }

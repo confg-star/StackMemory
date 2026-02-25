@@ -9,15 +9,15 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
-import { MapPin, Loader2, Plus } from 'lucide-react'
+import { MapPin, Loader2, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { useRoute } from '@/lib/context/RouteContext'
-import Link from 'next/link'
 import { Skeleton } from '@/components/ui/skeleton'
 
 export function RouteSelector() {
   const [switching, setSwitching] = useState(false)
-  const { routes, currentRoute, loading, switchingRoute, switchRoute } = useRoute()
+  const [deleting, setDeleting] = useState(false)
+  const { routes, currentRoute, loading, switchingRoute, switchRoute, refreshRoutes } = useRoute()
 
   const handleSwitchRoute = async (routeId: string) => {
     if (!routeId || routeId === currentRoute?.id) return
@@ -48,39 +48,56 @@ export function RouteSelector() {
 
   if (routes.length === 0) {
     return (
-      <div className="flex items-center gap-2">
+      <div className="flex items-center">
         <Button variant="outline" size="sm" disabled className="w-[180px] justify-start">
           <MapPin className="h-4 w-4 mr-2" />
           暂无路线
-        </Button>
-        <Button variant="outline" size="sm" asChild>
-          <Link href="/create">
-            <Plus className="h-4 w-4 mr-2" />
-            新建
-          </Link>
         </Button>
       </div>
     )
   }
 
+  const handleDeleteCurrentRoute = async () => {
+    if (!currentRoute?.id || deleting || switching || switchingRoute) return
+
+    const confirmed = window.confirm(`确认删除学习路线「${currentRoute.topic}」吗？\n\n删除后不可恢复。`)
+    if (!confirmed) return
+
+    setDeleting(true)
+    try {
+      const res = await fetch(`/api/routes?routeId=${encodeURIComponent(currentRoute.id)}`, {
+        method: 'DELETE',
+      })
+      const result = await res.json().catch(() => ({ success: false, error: '删除失败：服务响应异常' }))
+
+      if (!res.ok || !result.success) {
+        toast.error(result.error || '删除路线失败')
+        return
+      }
+
+      toast.success('路线已删除')
+      await refreshRoutes()
+    } catch (err) {
+      console.error('删除路线失败:', err)
+      toast.error('删除路线失败')
+    } finally {
+      setDeleting(false)
+    }
+  }
+
   return (
     <div className="flex items-center gap-2">
       <Select
-        value={currentRoute?.id || ''}
+        value={currentRoute?.id}
         onValueChange={handleSwitchRoute}
-        disabled={switching || switchingRoute}
+        disabled={switching || switchingRoute || deleting}
       >
-        <SelectTrigger className={`w-[180px] transition-opacity duration-200 ${(switching || switchingRoute) ? 'opacity-80' : 'opacity-100'}`}>
-          {(switching || switchingRoute) ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <>
-              <MapPin className="h-4 w-4 mr-2" />
-              <SelectValue placeholder="选择路线" />
-            </>
-          )}
+        <SelectTrigger className="w-[180px]">
+          <MapPin className="h-4 w-4 mr-2" />
+          <SelectValue placeholder="选择路线" />
+          {(switching || switchingRoute) && <Loader2 className="h-4 w-4 animate-spin ml-1" />}
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent position="popper" align="start" sideOffset={6} className="w-[--radix-select-trigger-width]">
           {routes.map((route) => (
             <SelectItem key={route.id} value={route.id}>
               <div className="flex items-center gap-2">
@@ -93,6 +110,17 @@ export function RouteSelector() {
           ))}
         </SelectContent>
       </Select>
+
+      <Button
+        variant="outline"
+        size="icon"
+        onClick={handleDeleteCurrentRoute}
+        disabled={!currentRoute || deleting || switching || switchingRoute}
+        title={currentRoute ? `删除路线：${currentRoute.topic}` : '暂无可删除路线'}
+        aria-label="删除当前路线"
+      >
+        {deleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+      </Button>
     </div>
   )
 }

@@ -2,8 +2,8 @@
 
 import { getCardRepository } from '@/lib/data-provider'
 import { CardWithTags } from '@/lib/data-provider/interfaces'
-import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { resolveServerUserId } from '@/lib/server-user'
 
 export interface GetCardsOptions {
   tagId?: string
@@ -14,17 +14,7 @@ export interface GetCardsOptions {
 }
 
 async function getAuthUserId(): Promise<{ userId: string | null; error?: string }> {
-  const supabase = await createClient()
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser()
-
-  if (userError || !user) {
-    return { userId: null, error: '请先登录' }
-  }
-
-  return { userId: user.id }
+  return resolveServerUserId()
 }
 
 export async function getCards(

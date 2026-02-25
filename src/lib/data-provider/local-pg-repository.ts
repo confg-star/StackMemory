@@ -146,6 +146,7 @@ export class LocalPgCardRepository implements CardRepository {
 
     try {
       await client.query('BEGIN')
+      await ensureLocalProfile(client, userId)
 
       const cardIds: string[] = []
 
@@ -226,6 +227,13 @@ export class LocalPgCardRepository implements CardRepository {
   async getOrCreateTags(userId: string, tagNames: string[]): Promise<string[]> {
     const pool = getPool()
     const tagIds: string[] = []
+
+    const profileClient = await pool.connect()
+    try {
+      await ensureLocalProfile(profileClient, userId)
+    } finally {
+      profileClient.release()
+    }
 
     for (const tagName of tagNames) {
       const normalizedTag = tagName.toLowerCase().trim()
@@ -334,10 +342,13 @@ export class LocalPgRouteRepository implements RouteRepository {
 
     try {
       await client.query('BEGIN')
+      await ensureLocalProfile(client, userId)
+
+      await client.query('UPDATE routes SET is_current = false WHERE user_id = $1', [userId])
 
       const { rows } = await client.query(
         `INSERT INTO routes (user_id, topic, background, goals, weeks, roadmap_data, is_current)
-         VALUES ($1, $2, $3, $4, $5, $6, false)
+         VALUES ($1, $2, $3, $4, $5, $6, true)
          RETURNING id, user_id, topic, background, goals, weeks, roadmap_data, is_current, created_at, updated_at`,
         [
           userId,
@@ -397,6 +408,70 @@ export class LocalPgRouteRepository implements RouteRepository {
       client.release()
     }
   }
+
+  async deleteRoute(userId: string, routeId: string): Promise<{ success: boolean; error?: string; nextCurrentRouteId?: string | null }> {
+    const pool = getPool()
+    const client = await pool.connect()
+
+    try {
+      await client.query('BEGIN')
+
+      const { rows: existing } = await client.query(
+        'SELECT id, is_current FROM routes WHERE id = $1 AND user_id = $2',
+        [routeId, userId]
+      )
+
+      if (existing.length === 0) {
+        await client.query('ROLLBACK')
+        return { success: false, error: '路线不存在或无权删除' }
+      }
+
+      const wasCurrent = Boolean(existing[0].is_current)
+
+      await client.query(
+        'DELETE FROM routes WHERE id = $1 AND user_id = $2',
+        [routeId, userId]
+      )
+
+      let nextCurrentRouteId: string | null = null
+
+      if (wasCurrent) {
+        const { rows: fallback } = await client.query(
+          `SELECT id
+           FROM routes
+           WHERE user_id = $1
+           ORDER BY updated_at DESC
+           LIMIT 1`,
+          [userId]
+        )
+
+        if (fallback.length > 0) {
+          nextCurrentRouteId = fallback[0].id as string
+          await client.query('UPDATE routes SET is_current = false WHERE user_id = $1', [userId])
+          await client.query('UPDATE routes SET is_current = true, updated_at = NOW() WHERE id = $1 AND user_id = $2', [nextCurrentRouteId, userId])
+        }
+      }
+
+      await client.query('COMMIT')
+      return { success: true, nextCurrentRouteId }
+    } catch (error) {
+      await client.query('ROLLBACK')
+      console.error('LocalPg deleteRoute error:', error)
+      return { success: false, error: String(error) }
+    } finally {
+      client.release()
+    }
+  }
+}
+
+async function ensureLocalProfile(client: pg.PoolClient, userId: string) {
+  const username = `user_${userId.slice(0, 8)}`
+  await client.query(
+    `INSERT INTO profiles (id, username, settings)
+     VALUES ($1, $2, '{"mode":"local_pg"}'::jsonb)
+     ON CONFLICT (id) DO NOTHING`,
+    [userId, username]
+  )
 }
 
 export class LocalPgRouteTaskRepository implements RouteTaskRepository {

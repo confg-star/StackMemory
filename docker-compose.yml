@@ -11,7 +11,7 @@ services:
       - POSTGRES_PASSWORD=stackpass
     volumes:
       - ./pgdata:/var/lib/postgresql/data
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./db/local-one-click-init.sql:/docker-entrypoint-initdb.d/001-local-init.sql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U stackuser -d stackmemory"]
       interval: 10s

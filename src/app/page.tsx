@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Sparkles, Target, NotebookText, ArrowRight, Loader2, AlertCircle, ChevronDown, ChevronUp } from 'lucide-react'
+import { useRoute } from '@/lib/context/RouteContext'
 
 const primaryActions = [
   {
@@ -26,28 +27,30 @@ const primaryActions = [
   },
 ]
 
-interface RoadmapData {
-  phases: {
-    id: string
-    title: string
-    weeks: string
-    goal: string
-    focus: string[]
-    deliverables: string[]
-  }[]
-  currentTasks: {
-    id: string
-    title: string
-    type: string
-    difficulty: string
-    estimate: string
-    objective: string
-    doneCriteria: string
-  }[]
+interface ApiResult<T> {
+  success: boolean
+  error?: string
+  data?: T
+}
+
+interface CreatedRoute {
+  id: string
+}
+
+type GenerationStage = 'idle' | 'ai' | 'saving' | 'switching' | 'syncing'
+
+const STAGE_ORDER: Exclude<GenerationStage, 'idle'>[] = ['ai', 'saving', 'switching', 'syncing']
+
+const STAGE_LABEL: Record<Exclude<GenerationStage, 'idle'>, string> = {
+  ai: 'AI 生成路线中',
+  saving: '保存路线到数据库',
+  switching: '切换到新路线',
+  syncing: '同步页面状态',
 }
 
 export default function Home() {
   const router = useRouter()
+  const { refreshRoutes } = useRoute()
   const [topic, setTopic] = useState('')
   const [background, setBackground] = useState('')
   const [goals, setGoals] = useState('')
@@ -57,8 +60,7 @@ export default function Home() {
   const [showAdvanced, setShowAdvanced] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [roadmapData, setRoadmapData] = useState<RoadmapData | null>(null)
-
+  const [generationStage, setGenerationStage] = useState<GenerationStage>('idle')
   const handleGenerate = async () => {
     if (!topic.trim()) {
       setError('请输入你想学习的内容')
@@ -73,6 +75,7 @@ export default function Home() {
 
     setLoading(true)
     setError('')
+    setGenerationStage('ai')
 
     try {
       const response = await fetch('/api/learning-roadmap', {
@@ -94,14 +97,54 @@ export default function Home() {
         throw new Error(result.error || '生成失败')
       }
 
-      setRoadmapData(result.data)
+      setGenerationStage('saving')
+      const createRouteResponse = await fetch('/api/routes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          topic: topic.trim(),
+          background: background.trim() || undefined,
+          goals: goals.trim() || undefined,
+          weeks: weeks.trim() ? parseInt(weeks.trim(), 10) : undefined,
+          roadmap_data: result.data,
+        }),
+      })
+
+      const createRouteResult: ApiResult<CreatedRoute> = await createRouteResponse.json()
+      if (!createRouteResponse.ok || !createRouteResult.success || !createRouteResult.data?.id) {
+        throw new Error(createRouteResult.error || '学习路线已生成，但保存失败')
+      }
+
+      setGenerationStage('switching')
+      const switchRouteResponse = await fetch('/api/routes/switch', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ route_id: createRouteResult.data.id }),
+      })
+
+      const switchRouteResult: ApiResult<unknown> = await switchRouteResponse.json()
+      if (!switchRouteResponse.ok || !switchRouteResult.success) {
+        throw new Error(switchRouteResult.error || '学习路线已生成，但切换失败')
+      }
+
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('stackmemory-current-route', createRouteResult.data.id)
+      }
+
+      setGenerationStage('syncing')
+      await refreshRoutes()
+
       router.push('/roadmap')
     } catch (err) {
       setError(err instanceof Error ? err.message : '生成学习路线失败，请稍后重试')
     } finally {
       setLoading(false)
+      setGenerationStage('idle')
     }
   }
+
+  const currentStageIndex = generationStage === 'idle' ? 0 : STAGE_ORDER.indexOf(generationStage) + 1
+  const progressPercent = generationStage === 'idle' ? 0 : Math.round((currentStageIndex / STAGE_ORDER.length) * 100)
   return (
     <div className="space-y-8">
       <div className="text-center space-y-4">
@@ -134,7 +177,7 @@ export default function Home() {
               {loading ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  生成中
+                  {generationStage === 'idle' ? '生成中' : STAGE_LABEL[generationStage]}
                 </>
               ) : (
                 <>
@@ -217,6 +260,21 @@ export default function Home() {
             <div className="flex items-center gap-2 text-sm text-red-500 bg-red-50 dark:bg-red-950/20 p-2 rounded">
               <AlertCircle className="h-4 w-4" />
               {error}
+            </div>
+          )}
+
+          {loading && generationStage !== 'idle' && (
+            <div className="rounded-md border border-primary/20 bg-primary/5 p-3 space-y-2">
+              <div className="flex items-center justify-between text-sm">
+                <span className="font-medium">{STAGE_LABEL[generationStage]}</span>
+                <span className="text-muted-foreground">{currentStageIndex}/{STAGE_ORDER.length}</span>
+              </div>
+              <div className="h-2 rounded-full bg-muted overflow-hidden">
+                <div
+                  className="h-full bg-primary transition-all duration-300"
+                  style={{ width: `${progressPercent}%` }}
+                />
+              </div>
             </div>
           )}
 
