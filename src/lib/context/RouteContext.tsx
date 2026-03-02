@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, useCallback, useRef, ReactNode } from 'react'
 import { trackEvent } from '@/lib/telemetry'
-import { getStoredUser } from '@/lib/auth/local-auth'
+import { getStoredUser } from '@/lib/auth/client-auth'
 
 interface Route {
   id: string

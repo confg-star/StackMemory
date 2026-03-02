@@ -180,3 +180,215 @@ export function shiftDate(date: Date, days: number): Date {
   next.setDate(next.getDate() + days)
   return next
 }
+
+export interface SafeLearningMaterial {
+  title: string
+  url: string
+  type: 'article' | 'video'
+  isGenerated?: boolean
+  content?: string
+}
+
+export interface SafeKnowledgePoint {
+  id: string
+  title: string
+  description?: string
+  materials: SafeLearningMaterial[]
+}
+
+export interface SafeLearningTask {
+  id: string
+  title: string
+  week: number
+  day?: number
+  type: '学习' | '实操' | '复盘'
+  status: 'pending' | 'in_progress' | 'completed'
+  difficulty?: '简单' | '中等' | '进阶'
+  estimate?: string
+  objective?: string
+  doneCriteria?: string
+  materials?: SafeLearningMaterial[]
+  knowledgePoints?: SafeKnowledgePoint[]
+}
+
+export interface SafeLearningPhase {
+  id: string
+  title: string
+  weeks: string
+  goal: string
+  focus: string[]
+  deliverables: string[]
+  tasks: SafeLearningTask[]
+}
+
+export interface SafeLearningOverview {
+  whatIs: string
+  keyTechnologies: string[]
+  capabilities: string[]
+  commonScenarios: string[]
+  quickStartPath: string[]
+  efficientLearningTips: string[]
+}
+
+export interface SafeRoadmapData {
+  overview: SafeLearningOverview
+  phases: SafeLearningPhase[]
+  currentTasks: SafeLearningTask[]
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
+}
+
+function isStringArray(value: unknown): value is string[] {
+  return Array.isArray(value) && value.every((item) => typeof item === 'string')
+}
+
+function toStringArray(value: unknown, fallback: string[] = []): string[] {
+  if (isStringArray(value)) return value
+  return fallback
+}
+
+function normalizeLearningMaterial(m: unknown): SafeLearningMaterial | null {
+  if (!isRecord(m)) return null
+  const title = typeof m.title === 'string' ? m.title.trim() : ''
+  const url = typeof m.url === 'string' ? m.url.trim() : ''
+  if (!title || !url) return null
+  return {
+    title,
+    url,
+    type: m.type === 'video' ? 'video' : 'article',
+    isGenerated: Boolean(m.isGenerated),
+    content: typeof m.content === 'string' ? m.content.trim() : undefined,
+  }
+}
+
+function normalizeKnowledgePoint(kp: unknown): SafeKnowledgePoint | null {
+  if (!isRecord(kp)) return null
+  const id = typeof kp.id === 'string' ? kp.id.trim() : ''
+  const title = typeof kp.title === 'string' ? kp.title.trim() : ''
+  if (!id || !title) return null
+
+  const materials = Array.isArray(kp.materials)
+    ? (kp.materials.map(normalizeLearningMaterial).filter(Boolean) as SafeLearningMaterial[])
+    : []
+
+  return {
+    id,
+    title,
+    description: typeof kp.description === 'string' ? kp.description.trim() : undefined,
+    materials,
+  }
+}
+
+function normalizeLearningTask(task: unknown): SafeLearningTask | null {
+  if (!isRecord(task)) return null
+  const id = typeof task.id === 'string' ? task.id.trim() : ''
+  const title = typeof task.title === 'string' ? task.title.trim() : ''
+  if (!id || !title) return null
+
+  const weekValue = task.week
+  const dayValue = task.day
+  const week = Number.isInteger(weekValue) && Number(weekValue) > 0 ? Number(weekValue) : 1
+  const day = Number.isInteger(dayValue) && Number(dayValue) > 0 ? Number(dayValue) : undefined
+
+  const type = task.type === '实操' || task.type === '复盘' ? task.type : '学习'
+  const status = task.status === 'completed' || task.status === 'in_progress' ? task.status : 'pending'
+  const difficulty = task.difficulty === '简单' || task.difficulty === '中等' || task.difficulty === '进阶' ? task.difficulty : undefined
+
+  const materials = Array.isArray(task.materials)
+    ? (task.materials.map(normalizeLearningMaterial).filter(Boolean) as SafeLearningMaterial[])
+    : []
+  const knowledgePoints = Array.isArray(task.knowledgePoints)
+    ? (task.knowledgePoints.map(normalizeKnowledgePoint).filter(Boolean) as SafeKnowledgePoint[])
+    : []
+
+  return {
+    id,
+    title,
+    week,
+    day,
+    type,
+    status,
+    difficulty,
+    estimate: typeof task.estimate === 'string' ? task.estimate.trim() : undefined,
+    objective: typeof task.objective === 'string' ? task.objective.trim() : undefined,
+    doneCriteria: typeof task.doneCriteria === 'string' ? task.doneCriteria.trim() : undefined,
+    materials,
+    knowledgePoints,
+  }
+}
+
+function normalizeLearningPhase(phase: unknown, index: number): SafeLearningPhase {
+  if (!isRecord(phase)) {
+    return {
+      id: `phase-${index + 1}`,
+      title: `阶段 ${index + 1}`,
+      weeks: '自定义',
+      goal: '',
+      focus: [],
+      deliverables: [],
+      tasks: [],
+    }
+  }
+
+  const tasks = Array.isArray(phase.tasks)
+    ? (phase.tasks.map(normalizeLearningTask).filter(Boolean) as SafeLearningTask[])
+    : []
+
+  return {
+    id: typeof phase.id === 'string' && phase.id.trim() ? phase.id.trim() : `phase-${index + 1}`,
+    title: typeof phase.title === 'string' ? phase.title.trim() : `阶段 ${index + 1}`,
+    weeks: typeof phase.weeks === 'string' ? phase.weeks : '自定义',
+    goal: typeof phase.goal === 'string' ? phase.goal.trim() : '',
+    focus: toStringArray(phase.focus),
+    deliverables: toStringArray(phase.deliverables),
+    tasks,
+  }
+}
+
+function normalizeLearningOverview(overview: unknown): SafeLearningOverview {
+  if (!isRecord(overview)) {
+    return {
+      whatIs: '暂无介绍',
+      keyTechnologies: [],
+      capabilities: [],
+      commonScenarios: [],
+      quickStartPath: [],
+      efficientLearningTips: [],
+    }
+  }
+
+  return {
+    whatIs: typeof overview.whatIs === 'string' ? overview.whatIs.trim() : '暂无介绍',
+    keyTechnologies: toStringArray(overview.keyTechnologies, []),
+    capabilities: toStringArray(overview.capabilities, []),
+    commonScenarios: toStringArray(overview.commonScenarios, []),
+    quickStartPath: toStringArray(overview.quickStartPath, []),
+    efficientLearningTips: toStringArray(overview.efficientLearningTips, []),
+  }
+}
+
+export function normalizeRoadmapDataSafe(data: unknown): SafeRoadmapData {
+  if (!isRecord(data)) {
+    return {
+      overview: normalizeLearningOverview(undefined),
+      phases: [],
+      currentTasks: [],
+    }
+  }
+
+  const overview = normalizeLearningOverview(data.overview)
+  const phases = Array.isArray(data.phases)
+    ? data.phases.map((phase, index) => normalizeLearningPhase(phase, index))
+    : []
+  const currentTasks = Array.isArray(data.currentTasks)
+    ? data.currentTasks.map(normalizeLearningTask).filter(Boolean) as SafeLearningTask[]
+    : []
+
+  return {
+    overview,
+    phases,
+    currentTasks,
+  }
+}

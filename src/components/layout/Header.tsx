@@ -6,7 +6,8 @@ import { createClient, hasSupabaseEnv } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Sparkles } from 'lucide-react'
 import { UserMenu } from './UserMenu'
-import { LocalUser, getStoredUser, LOCAL_AUTH_USER_COOKIE } from '@/lib/auth/local-auth'
+import { LocalUser, getStoredUser } from '@/lib/auth/client-auth'
+import { LOCAL_AUTH_USER_COOKIE } from '@/lib/auth/local-auth'
 import { RouteSelector } from './RouteSelector'
 import { CreateRouteDialog } from './CreateRouteDialog'
 import { useRoute } from '@/lib/context/RouteContext'
@@ -59,10 +60,9 @@ export function Header() {
   }, [])
 
   useEffect(() => {
-    const local = getStoredUser()
     const init = async () => {
       setMounted(true)
-      setLocalUser(local)
+      setLocalUser(getStoredUser())
       
       if (hasSupabaseEnv) {
         const user = await checkSession()
@@ -70,6 +70,23 @@ export function Header() {
       }
     }
     init()
+
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'stackmemory-current-user') {
+        if (e.newValue) {
+          try {
+            const user = JSON.parse(e.newValue) as LocalUser
+            setLocalUser(user)
+          } catch {
+            setLocalUser(null)
+          }
+        } else {
+          setLocalUser(null)
+        }
+      }
+    }
+
+    window.addEventListener('storage', handleStorageChange)
 
     if (!hasSupabaseEnv) return
 
@@ -80,7 +97,10 @@ export function Header() {
       setSupabaseUser(session?.user as SupabaseUser | null)
     })
 
-    return () => subscription.unsubscribe()
+    return () => {
+      subscription.unsubscribe()
+      window.removeEventListener('storage', handleStorageChange)
+    }
   }, [checkSession])
 
   const handleLocalSignOut = () => {

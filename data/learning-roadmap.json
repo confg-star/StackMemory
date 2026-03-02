@@ -1,239 +1,229 @@
 {
   "overview": {
-    "whatIs": "Docker 是一种把应用和运行环境一起“打包”的容器技术。你可以把它理解成标准化的“应用快递盒”：在你电脑能跑，在服务器上也基本能按同样方式跑，减少“我这边可以、你那边不行”的问题。",
+    "whatIs": "Docker 是一个“打包并运行应用”的工具。你可以把代码、运行环境、依赖一次性打包成镜像，再在任何安装了 Docker 的机器上稳定运行，避免“我电脑能跑、你电脑跑不起来”的问题。",
     "keyTechnologies": [
-      "Docker Engine",
+      "Docker Engine / Docker Desktop",
+      "Image & Container",
       "Dockerfile",
       "Docker Compose",
-      "镜像与容器管理",
-      "数据卷与网络"
+      "Volume 与 Network"
     ],
     "capabilities": [
-      "将本地项目打包为镜像并运行",
-      "用 Compose 一键启动多服务（如 Web + MySQL）",
-      "独立完成单机项目部署与基础排障",
-      "管理容器日志、端口、数据持久化与自动重启"
+      "能用常见命令完成镜像拉取、容器启动、日志查看与清理",
+      "能编写 Dockerfile 把项目容器化",
+      "能用 Docker Compose 一键启动多服务（如 Web + MySQL）",
+      "能独立完成一个小项目的本地部署与基本排障"
     ],
     "commonScenarios": [
-      "本地开发环境快速搭建",
-      "测试环境与线上环境一致化",
-      "个人项目/中小服务快速部署",
-      "微服务或多组件应用的本地联调"
+      "本地开发环境统一",
+      "新项目快速启动",
+      "测试环境快速部署",
+      "个人服务器部署小型应用"
     ],
     "quickStartPath": [
-      "先安装 Docker 并跑通 hello-world",
-      "掌握镜像/容器常用命令（run/ps/logs/exec）",
-      "学会写 Dockerfile 打包自己的应用",
-      "使用 Docker Compose 编排并部署一个完整小项目",
-      "做一次从零独立部署并复盘"
+      "先安装 Docker 并理解镜像/容器关系",
+      "再练习 10 个高频命令（run/ps/logs/exec 等）",
+      "然后把一个最小项目写成 Dockerfile",
+      "最后用 Compose 组织多容器并完成独立部署"
     ],
     "efficientLearningTips": [
-      "每次学习都要“边学边敲命令”，只看不练很难掌握",
-      "把每个命令整理成自己的速查清单（含用途+示例）",
-      "优先掌握 20% 高频命令，先能部署再追求高级特性",
-      "每周至少做一次完整闭环：构建镜像 -> 启动容器 -> 验证 -> 查看日志 -> 修复问题"
+      "你每周只有 2 小时，建议每次只学一个最小闭环：学概念→立刻敲命令→截图留证",
+      "每次实操都保留 README（命令、报错、修复方式），2 周后就能沉淀自己的部署模板"
     ]
   },
   "phases": [
     {
       "id": "phase-1",
-      "title": "2周冲刺：从零到可独立部署",
+      "title": "Docker 入门到独立部署（紧凑 2 周）",
       "weeks": "第1-2周",
-      "goal": "在有限时间内建立 Docker 实操能力，完成一个可复用的项目部署流程，并具备基础排障能力。",
+      "goal": "掌握 Docker 基本操作并独立完成一个多容器项目部署（含基础排障）",
       "focus": [
-        "核心概念与安装",
-        "镜像/容器命令实战",
-        "Dockerfile 打包",
-        "Compose 编排部署",
-        "独立部署复盘"
+        "核心概念与高频命令",
+        "Dockerfile 容器化",
+        "Docker Compose 多服务编排",
+        "日志与常见问题定位"
       ],
       "deliverables": [
-        "个人 Docker 命令速查表（10-15条）",
-        "可运行的 Dockerfile",
-        "可运行的 docker-compose.yml",
-        "一次独立部署记录（含问题与解决）"
+        "一个可运行的容器化项目（含 Dockerfile）",
+        "一个 docker-compose.yml（至少 2 个服务）",
+        "一份部署 README（启动、停止、重建、排障步骤）"
       ],
       "tasks": [
         {
-          "id": "t1-1-docker-concepts",
-          "title": "理解 Docker 核心概念与工作流",
+          "id": "t1-1",
+          "title": "安装 Docker 并建立容器认知",
           "week": 1,
           "day": 1,
           "type": "学习",
           "status": "pending",
           "difficulty": "简单",
-          "estimate": "35分钟",
-          "objective": "理解镜像、容器、仓库、数据卷、端口映射之间的关系，建立完整心智模型。",
-          "doneCriteria": "能用自己的话解释镜像和容器区别；画出“代码->镜像->容器->访问”的流程图。",
+          "estimate": "40分钟",
+          "objective": "完成 Docker 安装，理解镜像、容器、仓库三者关系",
+          "doneCriteria": "成功执行 `docker version` 与 `docker run hello-world`，并能用自己的话解释“镜像和容器的区别”",
           "materials": [
             {
-              "title": "Docker — 从入门到实践（中文）",
-              "url": "https://yeasy.gitbook.io/docker_practice/",
+              "title": "Docker Overview（官方）",
+              "url": "https://docs.docker.com/get-started/docker-overview/",
               "type": "article"
             },
             {
-              "title": "Docker Get Started",
-              "url": "https://docs.docker.com/get-started/",
+              "title": "Install Docker Desktop（官方）",
+              "url": "https://docs.docker.com/desktop/setup/install/",
               "type": "article"
             },
             {
-              "title": "What is a container?",
-              "url": "https://docs.docker.com/get-started/docker-concepts/the-basics/what-is-a-container/",
+              "title": "Get Docker（官方）",
+              "url": "https://docs.docker.com/get-started/get-docker/",
               "type": "article"
             }
           ],
           "knowledgePoints": []
         },
         {
-          "id": "t1-2-install-and-hello",
-          "title": "安装 Docker 并跑通首个容器",
+          "id": "t1-2",
+          "title": "高频命令实操：容器生命周期管理",
           "week": 1,
           "day": 2,
           "type": "实操",
           "status": "pending",
-          "difficulty": "简单",
+          "difficulty": "中等",
           "estimate": "40分钟",
-          "objective": "完成 Docker 安装、权限配置和 hello-world 运行验证。",
-          "doneCriteria": "终端成功执行 docker version、docker run hello-world，且无权限报错。",
+          "objective": "掌握 run/ps/stop/rm/logs/exec 等基础命令并能完成一次完整生命周期操作",
+          "doneCriteria": "能独立完成：拉取镜像→后台运行容器→查看日志→进入容器→停止并删除容器",
           "materials": [
             {
-              "title": "Install Docker Engine",
-              "url": "https://docs.docker.com/engine/install/",
+              "title": "Running containers（官方）",
+              "url": "https://docs.docker.com/get-started/docker-concepts/running-containers/",
               "type": "article"
             },
             {
-              "title": "Docker Desktop",
-              "url": "https://docs.docker.com/desktop/",
+              "title": "docker container run 命令参考（官方）",
+              "url": "https://docs.docker.com/reference/cli/docker/container/run/",
               "type": "article"
             },
             {
-              "title": "Linux post-installation steps",
-              "url": "https://docs.docker.com/engine/install/linux-postinstall/",
+              "title": "docker 命令行参考（官方）",
+              "url": "https://docs.docker.com/reference/cli/docker/",
               "type": "article"
             }
           ],
           "knowledgePoints": []
         },
         {
-          "id": "t1-3-cli-basics",
-          "title": "高频命令实操：镜像与容器管理",
+          "id": "t1-3",
+          "title": "编写第一个 Dockerfile 并构建镜像",
           "week": 1,
           "day": 3,
           "type": "实操",
           "status": "pending",
           "difficulty": "中等",
-          "estimate": "45分钟",
-          "objective": "掌握 run/ps/images/pull/logs/exec/stop/rm 等命令，能独立完成容器生命周期管理。",
-          "doneCriteria": "可独立完成：拉取 nginx、映射端口启动、进入容器查看文件、查看日志、停止并删除容器。",
+          "estimate": "40分钟",
+          "objective": "把一个最小 Web 项目写成 Dockerfile 并成功运行",
+          "doneCriteria": "本地能通过 `docker build` + `docker run -p` 启动服务，并在浏览器访问成功",
           "materials": [
             {
-              "title": "Docker CLI reference",
-              "url": "https://docs.docker.com/engine/reference/commandline/docker/",
+              "title": "Docker Getting Started 示例仓库",
+              "url": "https://github.com/docker/getting-started-app",
               "type": "article"
             },
             {
-              "title": "Publishing and exposing ports",
-              "url": "https://docs.docker.com/get-started/docker-concepts/running-containers/publishing-ports/",
+              "title": "Writing a Dockerfile（官方）",
+              "url": "https://docs.docker.com/get-started/docker-concepts/building-images/writing-a-dockerfile/",
               "type": "article"
             },
             {
-              "title": "Persisting container data",
-              "url": "https://docs.docker.com/get-started/docker-concepts/running-containers/persisting-container-data/",
+              "title": "Build best practices（官方）",
+              "url": "https://docs.docker.com/build/building/best-practices/",
               "type": "article"
             }
           ],
           "knowledgePoints": []
         },
         {
-          "id": "t1-4-dockerfile",
-          "title": "编写 Dockerfile 打包你的应用",
+          "id": "t1-4",
+          "title": "学习 Docker Compose：多容器编排入门",
           "week": 2,
           "day": 1,
-          "type": "实操",
+          "type": "学习",
           "status": "pending",
           "difficulty": "中等",
-          "estimate": "45分钟",
-          "objective": "学会使用 Dockerfile 将一个简单应用（如 Node/Python）构建成可运行镜像。",
-          "doneCriteria": "完成 Dockerfile 并成功 docker build；运行容器后可通过端口访问应用。",
+          "estimate": "40分钟",
+          "objective": "理解 compose.yml 结构与常见字段（services、ports、volumes、environment）",
+          "doneCriteria": "能读懂一个基础 compose.yml，并解释每个核心字段作用",
           "materials": [
             {
-              "title": "Dockerfile 指令详解（中文）",
-              "url": "https://yeasy.gitbook.io/docker_practice/image/dockerfile",
-              "type": "article"
-            },
-            {
-              "title": "Dockerfile reference",
-              "url": "https://docs.docker.com/reference/dockerfile/",
-              "type": "article"
-            },
-            {
-              "title": "Building container images",
-              "url": "https://docs.docker.com/get-started/docker-concepts/building-images/",
-              "type": "article"
-            }
-          ],
-          "knowledgePoints": []
-        },
-        {
-          "id": "t1-5-compose-deploy",
-          "title": "使用 Docker Compose 编排并部署多服务",
-          "week": 2,
-          "day": 2,
-          "type": "实操",
-          "status": "pending",
-          "difficulty": "中等",
-          "estimate": "50分钟",
-          "objective": "掌握 compose.yml 基础语法，完成 Web + DB 双服务启动与联通验证。",
-          "doneCriteria": "执行 docker compose up -d 成功启动两服务；应用可正常访问并连接数据库。",
-          "materials": [
-            {
-              "title": "awesome-compose 示例仓库",
-              "url": "https://github.com/docker/awesome-compose",
-              "type": "article"
-            },
-            {
-              "title": "Docker Compose overview",
-              "url": "https://docs.docker.com/compose/",
-              "type": "article"
-            },
-            {
-              "title": "Getting started with Docker Compose",
+              "title": "Docker Compose Getting Started（官方）",
               "url": "https://docs.docker.com/compose/gettingstarted/",
               "type": "article"
             },
             {
-              "title": "Compose file reference",
+              "title": "Compose file reference（官方）",
               "url": "https://docs.docker.com/reference/compose-file/",
+              "type": "article"
+            },
+            {
+              "title": "Environment variables in Compose（官方）",
+              "url": "https://docs.docker.com/compose/how-tos/environment-variables/set-environment-variables/",
               "type": "article"
             }
           ],
           "knowledgePoints": []
         },
         {
-          "id": "t1-6-independent-deploy-review",
-          "title": "独立部署一次并复盘排障",
+          "id": "t1-5",
+          "title": "实战：Compose 部署 Web + DB 两服务项目",
+          "week": 2,
+          "day": 2,
+          "type": "实操",
+          "status": "pending",
+          "difficulty": "中等",
+          "estimate": "45分钟",
+          "objective": "独立完成一个两服务项目的启动、数据持久化与服务互联",
+          "doneCriteria": "使用 `docker compose up -d` 成功启动 2 个服务；重启后数据仍在；应用可正常访问数据库",
+          "materials": [
+            {
+              "title": "Networking in Compose（官方）",
+              "url": "https://docs.docker.com/compose/how-tos/networking/",
+              "type": "article"
+            },
+            {
+              "title": "Volumes（官方）",
+              "url": "https://docs.docker.com/storage/volumes/",
+              "type": "article"
+            },
+            {
+              "title": "Control startup and shutdown order in Compose（官方）",
+              "url": "https://docs.docker.com/compose/how-tos/startup-order/",
+              "type": "article"
+            }
+          ],
+          "knowledgePoints": []
+        },
+        {
+          "id": "t1-6",
+          "title": "复盘与排障：形成可复用部署手册",
           "week": 2,
           "day": 3,
           "type": "复盘",
           "status": "pending",
-          "difficulty": "进阶",
-          "estimate": "45分钟",
-          "objective": "不看教程独立完成部署，记录问题定位方法（日志、重启策略、端口冲突等）。",
-          "doneCriteria": "形成一份部署复盘文档：步骤、命令、报错截图、解决方案、下次优化点。",
+          "difficulty": "中等",
+          "estimate": "35分钟",
+          "objective": "沉淀一份“独立部署清单”，掌握最常见问题定位方法",
+          "doneCriteria": "输出 README：包含启动/停止/重建命令、3个常见报错及修复步骤（端口占用、容器退出、连接失败）",
           "materials": [
             {
-              "title": "Docker 容器实用命令（中文）",
-              "url": "https://yeasy.gitbook.io/docker_practice/container",
+              "title": "docker logs 命令参考（官方）",
+              "url": "https://docs.docker.com/reference/cli/docker/container/logs/",
               "type": "article"
             },
             {
-              "title": "Configure logging drivers",
-              "url": "https://docs.docker.com/engine/logging/configure/",
+              "title": "docker exec 命令参考（官方）",
+              "url": "https://docs.docker.com/reference/cli/docker/container/exec/",
               "type": "article"
             },
             {
-              "title": "Start containers automatically",
-              "url": "https://docs.docker.com/engine/containers/start-containers-automatically/",
+              "title": "docker compose up 命令参考（官方）",
+              "url": "https://docs.docker.com/reference/cli/docker/compose/up/",
               "type": "article"
             }
           ],
@@ -244,34 +234,34 @@
   ],
   "currentTasks": [
     {
-      "id": "task-day1-docker-basics",
-      "title": "建立 Docker 核心认知（镜像/容器/仓库）",
+      "id": "task-day1-docker-setup",
+      "title": "安装 Docker 并跑通 hello-world",
       "type": "学习",
       "difficulty": "简单",
       "estimate": "30分钟",
-      "objective": "快速理解 Docker 的基本对象和工作流程，避免后续只会命令不会原理。",
-      "doneCriteria": "能口头解释 5 个关键词：image、container、registry、volume、port mapping。",
+      "objective": "完成安装并确认 Docker 可用",
+      "doneCriteria": "终端输出 Docker 版本信息，且 hello-world 成功运行一次",
       "knowledgePoints": [
         {
-          "id": "kp-image-vs-container",
-          "title": "镜像与容器的区别",
-          "description": "镜像是只读模板，容器是镜像运行后的实例；一个镜像可启动多个容器。",
+          "id": "kp-docker-arch",
+          "title": "Docker 基本架构",
+          "description": "理解客户端、Docker Engine、镜像仓库之间如何协作",
           "materials": [
             {
-              "title": "What is a container?",
-              "url": "https://docs.docker.com/get-started/docker-concepts/the-basics/what-is-a-container/",
+              "title": "Docker Overview（官方）",
+              "url": "https://docs.docker.com/get-started/docker-overview/",
               "type": "article"
             }
           ]
         },
         {
-          "id": "kp-docker-workflow",
-          "title": "典型工作流",
-          "description": "开发代码 -> 编写 Dockerfile -> build 镜像 -> run 容器 -> 通过日志/端口验证。",
+          "id": "kp-install-verify",
+          "title": "安装与验证",
+          "description": "按系统安装 Docker Desktop，并用基础命令验证",
           "materials": [
             {
-              "title": "Docker Get Started",
-              "url": "https://docs.docker.com/get-started/",
+              "title": "Install Docker Desktop（官方）",
+              "url": "https://docs.docker.com/desktop/setup/install/",
               "type": "article"
             }
           ]
@@ -279,113 +269,51 @@
       ],
       "materials": [
         {
-          "title": "Docker — 从入门到实践（中文）",
-          "url": "https://yeasy.gitbook.io/docker_practice/",
+          "title": "Get Docker（官方）",
+          "url": "https://docs.docker.com/get-started/get-docker/",
           "type": "article"
         },
         {
-          "title": "Docker Get Started",
-          "url": "https://docs.docker.com/get-started/",
+          "title": "Install Docker Desktop（官方）",
+          "url": "https://docs.docker.com/desktop/setup/install/",
           "type": "article"
         },
         {
-          "title": "What is a container?",
-          "url": "https://docs.docker.com/get-started/docker-concepts/the-basics/what-is-a-container/",
+          "title": "Docker Overview（官方）",
+          "url": "https://docs.docker.com/get-started/docker-overview/",
           "type": "article"
         }
       ]
     },
     {
-      "id": "task-day3-install-verify",
-      "title": "完成安装并验证 Docker 可用",
-      "type": "实操",
-      "difficulty": "简单",
-      "estimate": "40分钟",
-      "objective": "在你的本机完成安装、权限配置并跑通 hello-world。",
-      "doneCriteria": "执行 docker version 与 docker run hello-world 成功；保存终端截图。",
-      "knowledgePoints": [
-        {
-          "id": "kp-install-path",
-          "title": "不同平台安装路径",
-          "description": "Windows/macOS 常用 Docker Desktop；Linux 常用 Docker Engine。",
-          "materials": [
-            {
-              "title": "Docker Desktop",
-              "url": "https://docs.docker.com/desktop/",
-              "type": "article"
-            },
-            {
-              "title": "Install Docker Engine",
-              "url": "https://docs.docker.com/engine/install/",
-              "type": "article"
-            }
-          ]
-        },
-        {
-          "id": "kp-linux-permission",
-          "title": "Linux 权限与 post-install",
-          "description": "将当前用户加入 docker 组，避免每次都用 sudo。",
-          "materials": [
-            {
-              "title": "Linux post-installation steps",
-              "url": "https://docs.docker.com/engine/install/linux-postinstall/",
-              "type": "article"
-            }
-          ]
-        }
-      ],
-      "materials": [
-        {
-          "title": "Install Docker Engine",
-          "url": "https://docs.docker.com/engine/install/",
-          "type": "article"
-        },
-        {
-          "title": "Linux post-installation steps",
-          "url": "https://docs.docker.com/engine/install/linux-postinstall/",
-          "type": "article"
-        },
-        {
-          "title": "Docker Desktop",
-          "url": "https://docs.docker.com/desktop/",
-          "type": "article"
-        }
-      ]
-    },
-    {
-      "id": "task-day6-cli-practice",
-      "title": "高频命令 1 小时实战",
+      "id": "task-day1-basic-cli",
+      "title": "练习 6 个最常用命令（run/ps/stop/rm/logs/exec）",
       "type": "实操",
       "difficulty": "中等",
-      "estimate": "45分钟",
-      "objective": "掌握容器从创建到删除的完整生命周期操作。",
-      "doneCriteria": "独立完成：pull nginx -> run -p -> logs -> exec -> stop -> rm；并记录命令清单。",
+      "estimate": "40分钟",
+      "objective": "完成一次容器全生命周期操作",
+      "doneCriteria": "能不看教程独立完成：启动 nginx 容器、查看日志、进入容器、停止并删除",
       "knowledgePoints": [
         {
           "id": "kp-container-lifecycle",
-          "title": "容器生命周期命令",
-          "description": "重点练习 run/ps/logs/exec/stop/start/rm，建立排障最小闭环。",
+          "title": "容器生命周期",
+          "description": "从创建、运行到停止删除的完整过程",
           "materials": [
             {
-              "title": "Docker CLI reference",
-              "url": "https://docs.docker.com/engine/reference/commandline/docker/",
+              "title": "Running containers（官方）",
+              "url": "https://docs.docker.com/get-started/docker-concepts/running-containers/",
               "type": "article"
             }
           ]
         },
         {
-          "id": "kp-port-volume",
-          "title": "端口映射与数据持久化",
-          "description": "端口决定访问方式，volume 决定数据是否随容器删除而丢失。",
+          "id": "kp-cli-reference",
+          "title": "CLI 查询能力",
+          "description": "学会用官方 CLI 文档快速查参数",
           "materials": [
             {
-              "title": "Publishing and exposing ports",
-              "url": "https://docs.docker.com/get-started/docker-concepts/running-containers/publishing-ports/",
-              "type": "article"
-            },
-            {
-              "title": "Persisting container data",
-              "url": "https://docs.docker.com/get-started/docker-concepts/running-containers/persisting-container-data/",
+              "title": "Docker CLI reference（官方）",
+              "url": "https://docs.docker.com/reference/cli/docker/",
               "type": "article"
             }
           ]
@@ -393,18 +321,75 @@
       ],
       "materials": [
         {
-          "title": "Docker CLI reference",
-          "url": "https://docs.docker.com/engine/reference/commandline/docker/",
+          "title": "docker container run（官方）",
+          "url": "https://docs.docker.com/reference/cli/docker/container/run/",
           "type": "article"
         },
         {
-          "title": "Persisting container data",
-          "url": "https://docs.docker.com/get-started/docker-concepts/running-containers/persisting-container-data/",
+          "title": "docker container logs（官方）",
+          "url": "https://docs.docker.com/reference/cli/docker/container/logs/",
           "type": "article"
         },
         {
-          "title": "Publishing and exposing ports",
-          "url": "https://docs.docker.com/get-started/docker-concepts/running-containers/publishing-ports/",
+          "title": "Running containers（官方）",
+          "url": "https://docs.docker.com/get-started/docker-concepts/running-containers/",
+          "type": "article"
+        },
+        {
+          "title": "Docker CLI reference（官方）",
+          "url": "https://docs.docker.com/reference/cli/docker/",
+          "type": "article"
+        }
+      ]
+    },
+    {
+      "id": "task-day1-first-dockerfile",
+      "title": "写一个最小 Dockerfile 并构建镜像",
+      "type": "实操",
+      "difficulty": "中等",
+      "estimate": "45分钟",
+      "objective": "把一个简单应用容器化并可通过端口访问",
+      "doneCriteria": "成功执行 `docker build -t myapp .` 与 `docker run -p 8080:3000 myapp`，浏览器可访问",
+      "knowledgePoints": [
+        {
+          "id": "kp-dockerfile-core",
+          "title": "Dockerfile 核心指令",
+          "description": "理解 FROM、WORKDIR、COPY、RUN、CMD 的作用",
+          "materials": [
+            {
+              "title": "Writing a Dockerfile（官方）",
+              "url": "https://docs.docker.com/get-started/docker-concepts/building-images/writing-a-dockerfile/",
+              "type": "article"
+            }
+          ]
+        },
+        {
+          "id": "kp-image-best-practice",
+          "title": "镜像构建最佳实践",
+          "description": "减少镜像体积、提高构建可重复性",
+          "materials": [
+            {
+              "title": "Build best practices（官方）",
+              "url": "https://docs.docker.com/build/building/best-practices/",
+              "type": "article"
+            }
+          ]
+        }
+      ],
+      "materials": [
+        {
+          "title": "Docker Getting Started 示例仓库",
+          "url": "https://github.com/docker/getting-started-app",
+          "type": "article"
+        },
+        {
+          "title": "Writing a Dockerfile（官方）",
+          "url": "https://docs.docker.com/get-started/docker-concepts/building-images/writing-a-dockerfile/",
+          "type": "article"
+        },
+        {
+          "title": "Build best practices（官方）",
+          "url": "https://docs.docker.com/build/building/best-practices/",
           "type": "article"
         }
       ]

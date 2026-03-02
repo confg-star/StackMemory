@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { LogOut } from 'lucide-react'
 import { createClient, hasSupabaseEnv } from '@/lib/supabase/client'
-import { LocalUser } from '@/lib/auth/local-auth'
+import { LocalUser } from '@/lib/auth/client-auth'
 
 interface SupabaseUser {
   email?: string

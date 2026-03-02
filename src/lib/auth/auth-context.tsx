@@ -1,7 +1,8 @@
 'use client'
 
 import { createContext, useContext, useState, useCallback, ReactNode, useEffect } from 'react'
-import { LocalUser, getStoredUser, setStoredUser, localSignIn, localSignUp, localSignOut, LOCAL_AUTH_USER_COOKIE } from '@/lib/auth/local-auth'
+import { LocalUser } from './client-auth'
+import { getStoredUser, setStoredUser, localSignIn, localSignUp, localSignOut, LOCAL_AUTH_USER_COOKIE } from './local-auth'
 
 function setAuthCookie(userId: string) {
   if (typeof document === 'undefined') return
@@ -39,7 +40,7 @@ export function LocalAuthProvider({ children }: { children: ReactNode }) {
   }, [user])
 
   const handleSignIn = useCallback(async (email: string, password: string) => {
-    const result = localSignIn(email, password)
+    const result = await localSignIn(email, password)
     if (result.success && result.user) {
       setUser(result.user)
       setStoredUser(result.user)
@@ -49,7 +50,7 @@ export function LocalAuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const handleSignUp = useCallback(async (email: string, password: string, name?: string) => {
-    const result = localSignUp(email, password, name || '')
+    const result = await localSignUp(email, password, name || '')
     if (result.success && result.user) {
       setUser(result.user)
       setStoredUser(result.user)

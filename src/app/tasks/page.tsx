@@ -24,7 +24,9 @@ import {
   canShiftTaskDate,
   resolveTaskQueryDate,
   normalizeTaskDaysByWeek,
+  normalizeRoadmapDataSafe,
   type RouteTimelineTask,
+  type SafeRoadmapData,
 } from '@/lib/route-task-utils'
 
 interface RouteRoadmapData {
@@ -246,9 +248,9 @@ function TasksPageContent() {
           return
         }
 
-        const data = currentRoute.roadmap_data as unknown as RouteRoadmapData
-        const timelineTasks = data?.phases?.flatMap((phase) => normalizeTaskDaysByWeek(phase.tasks || [])) || []
-        const currentTasks = data?.currentTasks || []
+        const safeData = normalizeRoadmapDataSafe(currentRoute.roadmap_data)
+        const timelineTasks = safeData.phases.flatMap((phase) => normalizeTaskDaysByWeek(phase.tasks))
+        const currentTasks = safeData.currentTasks
         const matchedTimeline = timelineTasks.filter((task) => toRouteTaskDateKey(task, currentRoute.created_at) === dateKey)
 
         if (matchedTimeline.length === 0) {
@@ -311,6 +313,19 @@ function TasksPageContent() {
         }
       } catch (err) {
         console.error('解析任务数据失败:', err)
+        
+        const errorMessage = err instanceof Error ? err.message : String(err)
+        if (errorMessage.includes('Server Action') || errorMessage.includes('deployment')) {
+          toast.error('版本不匹配，请刷新页面重试', {
+            description: '服务器已更新，请刷新页面获取最新版本',
+            duration: 10000,
+            action: {
+              label: '刷新页面',
+              onClick: () => window.location.reload(),
+            },
+          })
+        }
+        
         setTasks([])
       } finally {
         if (requestVersion === loadVersionRef.current) {

@@ -10,8 +10,9 @@ import { Timeline } from '@/components/roadmap/Timeline'
 import { ModuleErrorBoundary } from '@/components/common/ModuleErrorBoundary'
 import { CheckCircle2, Circle, Clock, List, Calendar, Loader2 } from 'lucide-react'
 import { useRoute } from '@/lib/context/RouteContext'
-import { buildRouteDateScope, buildTasksPath, normalizeTaskDaysByWeek, toRouteTaskDateKey } from '@/lib/route-task-utils'
+import { buildRouteDateScope, buildTasksPath, toRouteTaskDateKey, normalizeRoadmapDataSafe, type SafeRoadmapData } from '@/lib/route-task-utils'
 import Link from 'next/link'
+import { toast } from 'sonner'
 
 interface LearningPhase {
   id: string
@@ -86,8 +87,9 @@ export default function RoadmapPage() {
   const router = useRouter()
   const [taskStatus, setTaskStatus] = useState<Record<string, 'pending' | 'in_progress' | 'completed'>>({})
   const [activePhase, setActivePhase] = useState<string>('phase-1')
-  const [roadmapData, setRoadmapData] = useState<RoadmapData | null>(null)
+  const [roadmapData, setRoadmapData] = useState<SafeRoadmapData | null>(null)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [navigatingTaskId, setNavigatingTaskId] = useState<string | null>(null)
   const { currentRoute } = useRoute()
   const loadVersionRef = useRef(0)
@@ -108,25 +110,60 @@ export default function RoadmapPage() {
       }
 
       try {
-        const data = currentRoute.roadmap_data as unknown as RoadmapData
-        if (data && data.phases) {
-          const normalizedData: RoadmapData = {
-            ...data,
-            phases: data.phases.map((phase) => ({
-              ...phase,
-              tasks: phase.tasks ? normalizeTaskDaysByWeek(phase.tasks) : [],
-            })),
+        const rawData = currentRoute.roadmap_data
+        if (!rawData) {
+          if (requestVersion === loadVersionRef.current) {
+            setLoading(false)
           }
-
-          if (requestVersion !== loadVersionRef.current) {
-            return
-          }
-          setRoadmapData(normalizedData)
-          setActivePhase(normalizedData.phases[0]?.id || 'phase-1')
-          setTaskStatus(loadTaskStatus(currentRoute.id))
+          return
         }
+
+        const safeData = normalizeRoadmapDataSafe(rawData)
+        
+        if (safeData.phases.length === 0) {
+          if (requestVersion === loadVersionRef.current) {
+            setRoadmapData(null)
+            setLoading(false)
+          }
+          return
+        }
+
+        const normalizedData: SafeRoadmapData = {
+          ...safeData,
+          phases: safeData.phases.map((phase) => ({
+            ...phase,
+            tasks: phase.tasks?.length ? phase.tasks : [],
+          })),
+        }
+
+        if (requestVersion !== loadVersionRef.current) {
+          return
+        }
+        setRoadmapData(normalizedData)
+        setActivePhase(normalizedData.phases[0]?.id || 'phase-1')
+        setTaskStatus(loadTaskStatus(currentRoute.id))
       } catch (err) {
         console.error('解析路线数据失败:', err)
+        
+        const errorMessage = err instanceof Error ? err.message : String(err)
+        if (errorMessage.includes('Server Action') || errorMessage.includes('deployment')) {
+          toast.error('版本不匹配，请刷新页面重试', {
+            description: '服务器已更新，请刷新页面获取最新版本',
+            duration: 10000,
+            action: {
+              label: '刷新页面',
+              onClick: () => window.location.reload(),
+            },
+          })
+        } else {
+          toast.error('路线数据解析失败', {
+            description: '请尝试切换路线或重新创建',
+          })
+        }
+        
+        if (requestVersion === loadVersionRef.current) {
+          setRoadmapData(null)
+        }
       } finally {
         if (requestVersion === loadVersionRef.current) {
           setLoading(false)
