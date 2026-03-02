@@ -23,16 +23,18 @@ interface TimelineProps {
 export function Timeline({ phases, currentWeek = 1, taskStatus = {}, statusKeyResolver, onTaskClick, onTaskNavigate, disableTaskActions = false }: TimelineProps) {
   const allTasks: (TimelineTask & { phaseId: string; phaseTitle: string })[] = 
     phases.flatMap(phase => 
-      (phase.tasks || []).map(task => ({
+      ((phase && phase.tasks) || []).map(task => ({
         ...task,
-        phaseId: phase.id,
-        phaseTitle: phase.title,
-        status: taskStatus[statusKeyResolver ? statusKeyResolver(task) : task.id] || task.status
+        week: typeof task.week === 'number' ? task.week : 1,
+        day: typeof task.day === 'number' ? task.day : 1,
+        phaseId: phase?.id || 'unknown',
+        phaseTitle: phase?.title || '未知阶段',
+        status: taskStatus[statusKeyResolver ? statusKeyResolver(task) : (task?.id || '')] || task?.status || 'pending'
       }))
     )
 
   const weekGroups = allTasks.reduce((acc, task) => {
-    const key = task.week
+    const key = typeof task.week === 'number' ? task.week : 1
     if (!acc[key]) acc[key] = []
     acc[key].push(task)
     return acc

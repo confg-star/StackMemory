@@ -335,14 +335,14 @@ export default function RoadmapPage() {
           <CardContent className="space-y-4">
             <div>
               <p className="text-sm font-medium text-muted-foreground">这是什么</p>
-              <p className="mt-1 leading-7">{roadmapData.overview.whatIs}</p>
+              <p className="mt-1 leading-7">{roadmapData.overview?.whatIs || '暂无介绍'}</p>
             </div>
 
             <div className="grid gap-4 md:grid-cols-2">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">关键技术</p>
                 <ul className="mt-2 list-disc pl-5 space-y-1 text-sm">
-                  {roadmapData.overview.keyTechnologies.map((item) => (
+                  {(roadmapData.overview?.keyTechnologies || []).map((item) => (
                     <li key={item}>{item}</li>
                   ))}
                 </ul>
@@ -350,7 +350,7 @@ export default function RoadmapPage() {
               <div>
                 <p className="text-sm font-medium text-muted-foreground">可以实现什么</p>
                 <ul className="mt-2 list-disc pl-5 space-y-1 text-sm">
-                  {roadmapData.overview.capabilities.map((item) => (
+                  {(roadmapData.overview?.capabilities || []).map((item) => (
                     <li key={item}>{item}</li>
                   ))}
                 </ul>
@@ -358,7 +358,7 @@ export default function RoadmapPage() {
               <div>
                 <p className="text-sm font-medium text-muted-foreground">常见应用场景</p>
                 <ul className="mt-2 list-disc pl-5 space-y-1 text-sm">
-                  {roadmapData.overview.commonScenarios.map((item) => (
+                  {(roadmapData.overview?.commonScenarios || []).map((item) => (
                     <li key={item}>{item}</li>
                   ))}
                 </ul>
@@ -366,7 +366,7 @@ export default function RoadmapPage() {
               <div>
                 <p className="text-sm font-medium text-muted-foreground">建议学习顺序</p>
                 <ul className="mt-2 list-disc pl-5 space-y-1 text-sm">
-                  {roadmapData.overview.quickStartPath.map((item) => (
+                  {(roadmapData.overview?.quickStartPath || []).map((item) => (
                     <li key={item}>{item}</li>
                   ))}
                 </ul>
@@ -376,7 +376,7 @@ export default function RoadmapPage() {
             <div>
               <p className="text-sm font-medium text-muted-foreground">更高效、更轻松的学习建议</p>
               <ul className="mt-2 list-disc pl-5 space-y-1 text-sm">
-                {roadmapData.overview.efficientLearningTips.map((item) => (
+                {(roadmapData.overview?.efficientLearningTips || []).map((item) => (
                   <li key={item}>{item}</li>
                 ))}
               </ul>
